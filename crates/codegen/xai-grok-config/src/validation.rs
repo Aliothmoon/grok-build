@@ -230,7 +230,7 @@ pub fn validate_requirements() -> Result<(), RequirementsError> {
 }
 
 /// Validate the user requirements layer if a user home resolves; otherwise a
-/// no-op (no cwd-relative `.grok/requirements.toml` is read or enforced).
+/// no-op (no cwd-relative `.igrok/requirements.toml` is read or enforced).
 fn validate_user_requirements(home: Option<&Path>) -> Result<(), RequirementsError> {
     match home {
         Some(g) => validate_requirements_layer(&g.join("requirements.toml")),

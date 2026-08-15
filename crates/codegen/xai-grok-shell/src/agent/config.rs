@@ -903,7 +903,7 @@ impl PluginsConfig {
     /// read here: a malicious repo could pre-populate `enabledPlugins` to
     /// bypass the project-plugin auto-disable logic in `populate_plugin_lists`,
     /// enabling attacker-controlled hooks (e.g. SessionStart → RCE).
-    /// Native `.grok/config.toml` entries already present take precedence:
+    /// Native `.igrok/config.toml` entries already present take precedence:
     /// a name is only added if it isn't already in the opposite list.
     pub(crate) fn merge_claude_enabled_plugins(&mut self, _cwd: Option<&std::path::Path>) {
         if crate::claude_import::is_claude_import_marked_with_log("merge_claude_enabled_plugins") {
@@ -1227,8 +1227,8 @@ pub struct StorageConfig {
 }
 /// `[paths]` configuration: extra directories to scan for skills, rules, etc.
 ///
-/// These supplement the built-in scan locations (`.grok/skills/`,
-/// `.agents/skills/`, `~/.grok/skills/`). They're written by `/import-claude`
+/// These supplement the built-in scan locations (`.igrok/skills/`,
+/// `.agents/skills/`, `~/.igrok/skills/`). They're written by `/import-claude`
 /// to preserve previously-discovered Claude directories after the runtime
 /// `.claude/` cutoff (see `[claude_compat] imported`).
 ///
@@ -1639,7 +1639,7 @@ pub use xai_grok_shared::ui_config::{ContextualHints, UiConfig};
 ///
 /// ```toml
 /// [agent]
-/// # Use a named agent (looked up via discovery: .grok/agents/, ~/.grok/agents/, built-ins)
+/// # Use a named agent (looked up via discovery: .igrok/agents/, ~/.igrok/agents/, built-ins)
 /// name = "my-custom-agent"
 ///
 /// # OR: path to an agent definition file (.md with YAML frontmatter)
@@ -1662,7 +1662,7 @@ pub struct AgentSelectionConfig {
     pub name: Option<String>,
     /// Path to an agent definition file (.md with YAML frontmatter).
     /// When set, the agent is loaded from this file.
-    /// Supports environment variable expansion (e.g., `$HOME/.grok/agents/my-agent.md`).
+    /// Supports environment variable expansion (e.g., `$HOME/.igrok/agents/my-agent.md`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub definition: Option<PathBuf>,
     /// Global system-prompt identity label. Per-model override wins.
@@ -2741,7 +2741,7 @@ impl Config {
             .default(true)
             .resolve()
     }
-    /// Background workflows (`workflow` tool, `.grok/workflows/*.rhai`,
+    /// Background workflows (`workflow` tool, `.igrok/workflows/*.rhai`,
     /// `/deep-research`, host-owned `/goal` driver). Default ON: deployments
     /// that never receive remote settings still get workflows; `Some(false)`
     /// remote / config / env remains a kill-switch.
@@ -3318,7 +3318,7 @@ fn error_reporting_enabled_from_toml(root: &toml::Value) -> Option<bool> {
 fn grok_telemetry_env_enabled() -> Option<bool> {
     env_telemetry_mode("GROK_TELEMETRY_ENABLED").map(|m| !m.is_disabled())
 }
-/// Load `~/.grok/requirements.toml` standalone so the admin pin can beat
+/// Load `~/.igrok/requirements.toml` standalone so the admin pin can beat
 /// env vars. The merged config layer can't express that — last-merge-wins
 /// loses provenance.
 pub(crate) fn read_requirements_toml() -> Option<toml::Value> {
@@ -4755,17 +4755,17 @@ pub struct Features {
     ///
     /// Practical consequence: setting
     /// `[features] mcp_push_server_status = false` in
-    /// `~/.grok/config.toml` will NOT disable the pager's
+    /// `~/.igrok/config.toml` will NOT disable the pager's
     /// subscription on a freshly-launched process. To disable the
     /// pager subscription, set `GROK_MCP_PUSH_SERVER_STATUS=0` in
     /// the env before launch.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mcp_push_server_status: Option<bool>,
     /// Whether the leader's `ConfigFileWatcher` adds the two narrow
-    /// non-recursive watches for `<cwd>/` and `<cwd>/.grok/`.
+    /// non-recursive watches for `<cwd>/` and `<cwd>/.igrok/`.
     ///
     /// When `true` (default), edits to `<cwd>/.mcp.json`,
-    /// `<cwd>/.grok/config.toml`, or `<cwd>/.claude.json` flow
+    /// `<cwd>/.igrok/config.toml`, or `<cwd>/.claude.json` flow
     /// through the watcher → reloader → `ConfigUpdate::
     /// ProjectMcpServersChanged { cwd }` → `app.rs` ACP-injection
     /// pipeline and the affected sessions reload their MCP servers

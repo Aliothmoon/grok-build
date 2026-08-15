@@ -5970,8 +5970,8 @@ mod tests {
             .run_until(async {
                 for path in [
                     "/etc/hosts",
-                    "/home/user/.grok/hooks/evil.json",
-                    "/home/user/.grok/sandbox.toml",
+                    "/home/user/.igrok/hooks/evil.json",
+                    "/home/user/.igrok/sandbox.toml",
                 ] {
                     let mut auto = crate::permission::types::PermissionConfig::new(vec![]);
                     auto.prompt_policy = PromptPolicy::Auto;

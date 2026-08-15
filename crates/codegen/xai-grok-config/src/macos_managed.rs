@@ -6,7 +6,7 @@
 //! domain; trusted on every launch, independent of network/cache. `None` off macOS.
 
 #[cfg(target_os = "macos")]
-const MANAGED_PREFERENCES_DOMAIN: &str = "ai.x.grok";
+const MANAGED_PREFERENCES_DOMAIN: &str = "ai.x.igrok";
 #[cfg(target_os = "macos")]
 const REQUIREMENTS_KEY: &str = "requirements_toml_base64";
 

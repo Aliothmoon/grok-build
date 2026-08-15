@@ -126,16 +126,16 @@ async fn stash_before_destructive_op_detached_head_dirty_returns_ref() {
 }
 #[test]
 fn restore_code_checkout_allowed_worktree_cwd_is_allowed() {
-    let worktrees = Path::new("/home/u/.grok/worktrees");
+    let worktrees = Path::new("/home/u/.igrok/worktrees");
     assert!(restore_code_checkout_allowed_in(
-        Path::new("/home/u/.grok/worktrees/home-u-repo/2026-05-22-9f2e51ce"),
+        Path::new("/home/u/.igrok/worktrees/home-u-repo/2026-05-22-9f2e51ce"),
         Some("/home/u/repo"),
         worktrees,
     ));
 }
 #[test]
 fn restore_code_checkout_allowed_same_cwd_is_allowed() {
-    let worktrees = Path::new("/home/u/.grok/worktrees");
+    let worktrees = Path::new("/home/u/.igrok/worktrees");
     assert!(restore_code_checkout_allowed_in(
         Path::new("/home/u/repo"),
         Some("/home/u/repo"),
@@ -149,16 +149,16 @@ fn restore_code_checkout_allowed_same_cwd_is_allowed() {
 }
 #[test]
 fn restore_code_checkout_allowed_source_repo_with_worktree_session_is_refused() {
-    let worktrees = Path::new("/home/u/.grok/worktrees");
+    let worktrees = Path::new("/home/u/.igrok/worktrees");
     assert!(!restore_code_checkout_allowed_in(
         Path::new("/home/u/repo"),
-        Some("/home/u/.grok/worktrees/home-u-repo/2026-05-22-9f2e51ce"),
+        Some("/home/u/.igrok/worktrees/home-u-repo/2026-05-22-9f2e51ce"),
         worktrees,
     ));
 }
 #[test]
 fn restore_code_checkout_allowed_missing_persisted_cwd_is_refused() {
-    let worktrees = Path::new("/home/u/.grok/worktrees");
+    let worktrees = Path::new("/home/u/.igrok/worktrees");
     assert!(!restore_code_checkout_allowed_in(
         Path::new("/home/u/repo"),
         None,

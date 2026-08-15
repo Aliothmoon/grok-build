@@ -2916,7 +2916,7 @@ mod tests {
         // A skill arrives as an ACP command carrying skill meta (scope + path).
         let skill_meta = serde_json::json!({
             "scope": "local",
-            "path": "/home/user/.grok/skills/skill-cmd/SKILL.md",
+            "path": "/home/user/.igrok/skills/skill-cmd/SKILL.md",
         })
         .as_object()
         .cloned()

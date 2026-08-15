@@ -31,7 +31,7 @@ In addition to AGENTS.md files, Grok scans for `*.md` files in rules directories
 
 | Location | Notes |
 |----------|-------|
-| `<dir>/.grok/rules/` | Always scanned |
+| `<dir>/.igrok/rules/` | Always scanned |
 | `<dir>/.claude/rules/` | Claude compatibility (configurable) |
 | `<dir>/.cursor/rules/` | Cursor compatibility (configurable) |
 
@@ -39,7 +39,7 @@ Grok also scans home-level rules, regardless of where it starts. These roots are
 
 | Location | Notes |
 |----------|-------|
-| `$GROK_HOME/rules/` (default `~/.grok/rules/`) | Always scanned; applies to all projects |
+| `$GROK_HOME/rules/` (default `~/.igrok/rules/`) | Always scanned; applies to all projects |
 | `~/.claude/rules/` | Controlled by `compat.claude.rules` |
 | `~/.cursor/rules/` | Controlled by `compat.cursor.rules` |
 
@@ -187,22 +187,22 @@ Files ignored by `.gitignore` are skipped during discovery. To keep personal ove
 CLAUDE.local.md
 ```
 
-As top-level instruction files, Grok discovers only the recognized filenames listed under [Supported File Names](#supported-file-names) — not custom names such as `AGENTS.local.md` or `notes.md`. (Inside a rules directory such as `.grok/rules/`, every `*.md` file is loaded regardless of name.)
+As top-level instruction files, Grok discovers only the recognized filenames listed under [Supported File Names](#supported-file-names) — not custom names such as `AGENTS.local.md` or `notes.md`. (Inside a rules directory such as `.igrok/rules/`, every `*.md` file is loaded regardless of name.)
 
 ---
 
-## The .grok/ Project Directory
+## The .igrok/ Project Directory
 
-Beyond AGENTS.md files, the `.grok/` directory in your project root can contain additional project-level configuration:
+Beyond AGENTS.md files, the `.igrok/` directory in your project root can contain additional project-level configuration:
 
 | Path | Purpose |
 |------|---------|
-| `.grok/config.toml` | Project-scoped MCP servers, plugins, and permission rules (other settings load only from `~/.grok/config.toml`) |
-| `.grok/skills/` | Project-scoped skill definitions |
-| `.grok/plugins/` | Project-scoped plugins |
-| `.grok/agents/` | Project-scoped agent definitions |
-| `.grok/hooks/` | Project-scoped lifecycle hooks |
-| `.grok/lsp.json` | LSP server configuration |
+| `.igrok/config.toml` | Project-scoped MCP servers, plugins, and permission rules (other settings load only from `~/.igrok/config.toml`) |
+| `.igrok/skills/` | Project-scoped skill definitions |
+| `.igrok/plugins/` | Project-scoped plugins |
+| `.igrok/agents/` | Project-scoped agent definitions |
+| `.igrok/hooks/` | Project-scoped lifecycle hooks |
+| `.igrok/lsp.json` | LSP server configuration |
 
 These are all optional. See the respective guides for details on each.
 
@@ -230,7 +230,7 @@ This shows each project instruction file it finds, with its path and approximate
 
 4. **Use subdirectory scoping for large repos.** Different parts of a monorepo may have different conventions. Use per-directory AGENTS.md to scope rules appropriately.
 
-5. **Version control your rules.** Commit AGENTS.md to the repository so the whole team benefits. User-specific overrides belong in `~/.grok/` (global rules).
+5. **Version control your rules.** Commit AGENTS.md to the repository so the whole team benefits. User-specific overrides belong in `~/.igrok/` (global rules).
 
 6. **Do not duplicate documentation.** AGENTS.md should contain actionable instructions, not a copy of your project's README. Link to external docs if needed.
 

@@ -952,7 +952,7 @@ mod tests {
         handle
             .on_turn_boundary("main", TurnBoundary::rewind_finalize(0))
             .await;
-        let store_root = cwd.join(".grok").join("rewind-checkpoints");
+        let store_root = cwd.join(".igrok").join("rewind-checkpoints");
         assert!(
             !store_root.exists(),
             "flag-off finalize must not touch disk (legacy default)"
@@ -979,7 +979,7 @@ mod tests {
         );
         session.capture_hunk_delta(0).await;
         session.persist_checkpoint(0).await;
-        let store_root = cwd.join(".grok").join("rewind-checkpoints");
+        let store_root = cwd.join(".igrok").join("rewind-checkpoints");
         assert!(store_root.exists(), "persist creates the durable store dir");
         let stored = session
             .checkpoint_store

@@ -57,7 +57,7 @@ pub enum Command {
     /// Fetch and install managed configuration
     Setup {
         /// Print the fetched configuration as JSON instead of installing it;
-        /// writes nothing to ~/.grok.
+        /// writes nothing to ~/.igrok.
         #[arg(long)]
         json: bool,
     },
@@ -81,7 +81,7 @@ Examples:
   grok wrap docker exec -it my-container bash
   grok wrap kubectl exec -it my-pod -- bash
 
-See ~/.grok/README.md for more information.
+See ~/.igrok/README.md for more information.
 ")]
     Wrap(WrapArgs),
     /// Export a session transcript as Markdown
@@ -135,7 +135,7 @@ See ~/.grok/README.md for more information.
     },
     /// Manage git worktrees
     Worktree(crate::worktree_cmd::WorktreeArgs),
-    /// Show what the grok home (~/.grok) uses on disk
+    /// Show what the grok home (~/.igrok) uses on disk
     #[command(name = "du", visible_alias = "disk-usage")]
     DiskUsage(crate::disk_usage_cmd::DiskUsageArgs),
     /// Expose this workspace to the Computer Hub (via the leader).
@@ -148,7 +148,7 @@ See ~/.grok/README.md for more information.
     ///
     /// Centralised, agent-native overview of every session (top-level and
     /// subagents). Disabled when `[dashboard].enabled = false` in
-    /// `~/.grok/config.toml` or when the `GROK_AGENT_DASHBOARD=0` env
+    /// `~/.igrok/config.toml` or when the `GROK_AGENT_DASHBOARD=0` env
     /// var is set.
     Dashboard,
 }
@@ -435,7 +435,7 @@ pub struct PagerArgs {
     /// Working directory.
     #[arg(long)]
     pub cwd: Option<PathBuf>,
-    /// Use a custom leader socket path instead of the default `~/.grok/leader.sock`.
+    /// Use a custom leader socket path instead of the default `~/.igrok/leader.sock`.
     #[arg(
         long = "leader-socket",
         value_name = "PATH",
@@ -764,7 +764,7 @@ pub struct PagerArgs {
     /// into the terminal's native scrollback (use the terminal's own scroll /
     /// selection); a small pinned region holds the prompt + running turn.
     /// Session-scoped only — does not write config. To default plain `grok` to
-    /// minimal, set `[ui] screen_mode = "minimal"` in ~/.grok/config.toml.
+    /// minimal, set `[ui] screen_mode = "minimal"` in ~/.igrok/config.toml.
     #[arg(long = "minimal")]
     pub minimal: bool,
     /// Open in the standard fullscreen TUI for this session, overriding a
@@ -773,7 +773,7 @@ pub struct PagerArgs {
     /// policy (--no-alt-screen, [terminal] alt_screen, terminal auto-detection).
     #[arg(long = "fullscreen", conflicts_with = "minimal")]
     pub fullscreen: bool,
-    /// Write sampling events to ~/.grok/logs/sampling.jsonl.
+    /// Write sampling events to ~/.igrok/logs/sampling.jsonl.
     #[arg(long = "log-sampling", env = "GROK_LOG_SAMPLING", hide = true)]
     pub log_sampling: bool,
     /// Show the login screen even when credentials are already available.

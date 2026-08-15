@@ -141,7 +141,7 @@ backup file so you can retrieve the text. Run `/doctor` for other copy options.
 #### Apple Terminal over SSH
 
 Apple Terminal does not support OSC 52, so a remote copy cannot reach the local
-clipboard. Each copy is still saved to a backup file (`~/.grok/last-copy.txt` by
+clipboard. Each copy is still saved to a backup file (`~/.igrok/last-copy.txt` by
 default; override with `GROK_COPY_FILE`); the toast names that path when delivery
 is unverified or the clipboard is unreachable. You can also use `/copy <file>` or
 `/minimal`.
@@ -175,7 +175,7 @@ check.
 
 Zellij and tmux control mode can limit the alternate screen. Grok normally uses
 inline mode in those environments. Run `/doctor` to see the detected condition.
-You can configure `[terminal] alt_screen` in `~/.grok/pager.toml`, or run
+You can configure `[terminal] alt_screen` in `~/.igrok/pager.toml`, or run
 `grok --no-alt-screen` to confirm inline mode works.
 
 ### Zellij keybindings interfere with Grok
@@ -250,7 +250,7 @@ terminals, Terminal.app, Konsole, mlterm, and others). Grok Build therefore
 **does not** reorder RTL by default.
 
 If Arabic or Persian in **scrollback** (or list content) reads backwards,
-enable app-side reordering in `~/.grok/pager.toml` (or project config):
+enable app-side reordering in `~/.igrok/pager.toml` (or project config):
 
 ```toml
 [scrollback.display]

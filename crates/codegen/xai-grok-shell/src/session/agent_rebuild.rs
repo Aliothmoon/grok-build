@@ -502,7 +502,7 @@ mod tests {
             .expect("GrokBuild Task description should be present")
     }
     /// The `[toolset.web_search]` policy is authoritative on the backend-hosted
-    /// path: agent frontmatter is model-writable (`.grok/agents/*.md`), so a
+    /// path: agent frontmatter is model-writable (`.igrok/agents/*.md`), so a
     /// configured blocklist must survive a frontmatter allowlist, matching the
     /// client-side `resolve_filters`. With no configured policy, frontmatter
     /// still applies.

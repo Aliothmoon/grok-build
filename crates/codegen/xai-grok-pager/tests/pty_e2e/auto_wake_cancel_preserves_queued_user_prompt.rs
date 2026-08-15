@@ -294,7 +294,7 @@ pub(crate) async fn run_wake_cancel_scenario(gesture: WakeCancelGesture, cast_pr
 
 #[cfg(unix)]
 fn unified_log_diagnostics(content: &ContentController) -> String {
-    let path = content.home().join(".grok/logs/unified.jsonl");
+    let path = content.home().join(".igrok/logs/unified.jsonl");
     let log = std::fs::read_to_string(path).unwrap_or_default();
     let mut tail: Vec<&str> = log.lines().rev().take(80).collect();
     tail.reverse();

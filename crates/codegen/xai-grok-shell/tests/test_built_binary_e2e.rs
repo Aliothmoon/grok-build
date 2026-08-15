@@ -1577,7 +1577,7 @@ async fn test_stdio_agent_exits_on_stdin_eof() {
 
 // ── Config test harness ─────────────────────────────────────────────────────
 
-/// Isolated headless run with a custom `~/.grok/`. Clean env (no leaked
+/// Isolated headless run with a custom `~/.igrok/`. Clean env (no leaked
 /// host credentials). Write config files into `grok_dir()` before `run()`.
 struct ConfigTestHarness {
     sandbox: TestSandbox,

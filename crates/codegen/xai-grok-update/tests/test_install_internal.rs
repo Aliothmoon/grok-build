@@ -257,7 +257,7 @@ async fn install_internal_chmods_binary_executable() {
 #[serial]
 async fn install_internal_cleans_up_stale_pager_symlink() {
     // Old installations shipped a separate grok-pager binary. Verify the
-    // update removes the stale symlink from ~/.grok/bin/.
+    // update removes the stale symlink from ~/.igrok/bin/.
     let _ = test_home();
     reset_home();
     let platform = host_platform();

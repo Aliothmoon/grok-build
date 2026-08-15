@@ -1021,7 +1021,7 @@ fn resume_source_worktree_reuse() {
         child_session_id: "child-wt".into(),
         child_cwd: "/tmp/worktree".into(),
         worktree_path: Some(
-            PathBuf::from("/home/user/.grok/worktrees/myrepo/subagent-sub-wt"),
+            PathBuf::from("/home/user/.igrok/worktrees/myrepo/subagent-sub-wt"),
         ),
         snapshot_ref: None,
         subagent_type: "general-purpose".into(),
@@ -1032,7 +1032,7 @@ fn resume_source_worktree_reuse() {
     assert_eq!(
             worktree.as_deref(),
             Some(Path::new(
-                "/home/user/.grok/worktrees/myrepo/subagent-sub-wt",
+                "/home/user/.igrok/worktrees/myrepo/subagent-sub-wt",
             )),
             "should reuse source worktree"
         );
@@ -1114,7 +1114,7 @@ fn select_override_cwd_resume_never_falls_through_to_request_cwd() {
         child_session_id: "child-wt".into(),
         child_cwd: "/tmp/whatever".into(),
         worktree_path: Some(
-            PathBuf::from("/home/user/.grok/worktrees/repo/subagent-sub-wt"),
+            PathBuf::from("/home/user/.igrok/worktrees/repo/subagent-sub-wt"),
         ),
         snapshot_ref: None,
         subagent_type: "general-purpose".into(),

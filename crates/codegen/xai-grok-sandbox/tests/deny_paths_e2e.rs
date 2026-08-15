@@ -684,7 +684,7 @@ fn fixture_homes(
     let grok = unique_temp_dir(&format!("{tag}-grok"));
     let workspace = unique_temp_dir(&format!("{tag}-ws"));
     // Empty global sandbox config under fixture GROK_HOME so generic tests do
-    // not inherit the developer/runner's ~/.grok/sandbox.toml.
+    // not inherit the developer/runner's ~/.igrok/sandbox.toml.
     fs::write(grok.join("sandbox.toml"), "").expect("empty global sandbox.toml");
     (
         home.clone(),
@@ -720,9 +720,9 @@ fn run_deny_case(
         .map(|p| format!("\"{p}\""))
         .collect::<Vec<_>>()
         .join(", ");
-    fs::create_dir_all(tmp.join(".grok")).expect("mkdir .grok");
+    fs::create_dir_all(tmp.join(".igrok")).expect("mkdir .igrok");
     fs::write(
-        tmp.join(".grok").join("sandbox.toml"),
+        tmp.join(".igrok").join("sandbox.toml"),
         format!("[profiles.{profile}]\nextends = \"workspace\"\ndeny = [{deny_list}]\n"),
     )
     .expect("write sandbox.toml");

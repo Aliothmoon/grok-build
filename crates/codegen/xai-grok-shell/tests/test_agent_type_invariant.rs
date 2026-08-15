@@ -31,7 +31,7 @@ where
 /// second spawn in a resume test reads the stale cache written by phase 1
 /// and never sees the updated model list.
 fn invalidate_models_cache(home: &std::path::Path) {
-    let cache = home.join(".grok").join("models_cache.json");
+    let cache = home.join(".igrok").join("models_cache.json");
     if cache.exists() {
         std::fs::remove_file(&cache).expect("failed to delete models_cache.json");
     }

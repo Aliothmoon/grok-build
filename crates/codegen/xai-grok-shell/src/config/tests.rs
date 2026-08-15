@@ -2243,7 +2243,7 @@ fn roles_parse_from_toml() {
             [roles.implementer]
             description = "Implementation agent"
             default_capability_mode = "all"
-            prompt_file = ".grok/prompts/impl.md"
+            prompt_file = ".igrok/prompts/impl.md"
         "#;
     let cfg: SubagentsConfig = toml::from_str(toml_str).unwrap();
     assert_eq!(cfg.roles.len(), 2);
@@ -2261,7 +2261,7 @@ fn roles_parse_from_toml() {
     assert!(implementer.model.is_none());
     assert_eq!(
             implementer.prompt_file.as_deref(),
-            Some(".grok/prompts/impl.md")
+            Some(".igrok/prompts/impl.md")
         );
 }
 #[test]
@@ -2340,7 +2340,7 @@ fn validate_roles_accepts_valid_prompt_file() {
     let toml_str = r#"
             [roles.ok]
             description = "Valid prompt file"
-            prompt_file = ".grok/prompts/ok.md"
+            prompt_file = ".igrok/prompts/ok.md"
         "#;
     let cfg: SubagentsConfig = toml::from_str(toml_str).unwrap();
     assert!(cfg.validate_roles().is_empty());
@@ -2348,7 +2348,7 @@ fn validate_roles_accepts_valid_prompt_file() {
 #[test]
 fn discover_roles_loads_from_directory() {
     let tmp = tempfile::TempDir::new().unwrap();
-    let roles_dir = tmp.path().join(".grok").join("roles");
+    let roles_dir = tmp.path().join(".igrok").join("roles");
     std::fs::create_dir_all(&roles_dir).unwrap();
     std::fs::write(
             roles_dir.join("reviewer.toml"),
@@ -2367,7 +2367,7 @@ fn discover_roles_loads_from_directory() {
 #[test]
 fn discover_roles_inline_takes_precedence() {
     let tmp = tempfile::TempDir::new().unwrap();
-    let roles_dir = tmp.path().join(".grok").join("roles");
+    let roles_dir = tmp.path().join(".igrok").join("roles");
     std::fs::create_dir_all(&roles_dir).unwrap();
     std::fs::write(
             roles_dir.join("researcher.toml"),
@@ -2391,7 +2391,7 @@ fn discover_roles_inline_takes_precedence() {
 #[test]
 fn discover_roles_ignores_non_toml_files() {
     let tmp = tempfile::TempDir::new().unwrap();
-    let roles_dir = tmp.path().join(".grok").join("roles");
+    let roles_dir = tmp.path().join(".igrok").join("roles");
     std::fs::create_dir_all(&roles_dir).unwrap();
     std::fs::write(roles_dir.join("readme.md"), "This is not a role definition")
         .unwrap();
@@ -2414,7 +2414,7 @@ fn personas_parse_from_toml() {
 
             [personas.concise]
             instructions = "Be concise."
-            instructions_file = ".grok/personas/concise.md"
+            instructions_file = ".igrok/personas/concise.md"
         "#;
     let cfg: SubagentsConfig = toml::from_str(toml_str).unwrap();
     assert_eq!(cfg.personas.len(), 2);
@@ -2428,7 +2428,7 @@ fn personas_parse_from_toml() {
     assert_eq!(concise.instructions.as_deref(), Some("Be concise."));
     assert_eq!(
             concise.instructions_file.as_deref(),
-            Some(".grok/personas/concise.md")
+            Some(".igrok/personas/concise.md")
         );
 }
 #[test]
@@ -2444,7 +2444,7 @@ fn persona_lookup_returns_none_for_unknown() {
 #[test]
 fn discover_personas_loads_from_directory() {
     let tmp = tempfile::TempDir::new().unwrap();
-    let dir = tmp.path().join(".grok").join("personas");
+    let dir = tmp.path().join(".igrok").join("personas");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(
             dir.join("friendly.toml"),
@@ -2459,7 +2459,7 @@ fn discover_personas_loads_from_directory() {
 #[test]
 fn discover_personas_inline_takes_precedence() {
     let tmp = tempfile::TempDir::new().unwrap();
-    let dir = tmp.path().join(".grok").join("personas");
+    let dir = tmp.path().join(".igrok").join("personas");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("strict.toml"), r#"instructions = "File-based strict""#)
         .unwrap();
@@ -2501,7 +2501,7 @@ fn project_overlay_preserves_source_precedence() {
     let home = tmp.path().join("home");
     let bundled = tmp.path().join("bundled");
     write_subagent_definitions(
-        &project.join(".grok"),
+        &project.join(".igrok"),
         &[
             ("shadowed", "Project"),
             ("bundled-shadowed", "Project"),
@@ -2510,7 +2510,7 @@ fn project_overlay_preserves_source_precedence() {
         ],
     );
     write_subagent_definitions(
-        &home.join(".grok"),
+        &home.join(".igrok"),
         &[("shadowed", "User"), ("user-only", "User")],
     );
     write_subagent_definitions(
@@ -2535,7 +2535,7 @@ fn project_overlay_preserves_source_precedence() {
     let base = SubagentsConfig::resolve_base_with_sources(
         false,
         &config,
-        Some(&home.join(".grok")),
+        Some(&home.join(".igrok")),
         &bundled,
     );
     let resolve = |project_trusted| {
@@ -2621,11 +2621,11 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
     let tmp = tempfile::TempDir::new().unwrap();
     let home = tmp.path().join("home");
     let workspace = tmp.path().join("workspace");
-    let bundled = home.join(".grok").join("bundled");
-    std::fs::create_dir_all(workspace.join(".grok").join("roles")).unwrap();
-    std::fs::create_dir_all(workspace.join(".grok").join("personas")).unwrap();
-    std::fs::create_dir_all(home.join(".grok").join("roles")).unwrap();
-    std::fs::create_dir_all(home.join(".grok").join("personas")).unwrap();
+    let bundled = home.join(".igrok").join("bundled");
+    std::fs::create_dir_all(workspace.join(".igrok").join("roles")).unwrap();
+    std::fs::create_dir_all(workspace.join(".igrok").join("personas")).unwrap();
+    std::fs::create_dir_all(home.join(".igrok").join("roles")).unwrap();
+    std::fs::create_dir_all(home.join(".igrok").join("personas")).unwrap();
     std::fs::create_dir_all(bundled.join("roles")).unwrap();
     std::fs::create_dir_all(bundled.join("personas")).unwrap();
     std::fs::write(
@@ -2639,22 +2639,22 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
         )
         .unwrap();
     std::fs::write(
-            home.join(".grok/roles/reviewer.toml"),
+            home.join(".igrok/roles/reviewer.toml"),
             r#"description = "User reviewer""#,
         )
         .unwrap();
     std::fs::write(
-            home.join(".grok/personas/reviewer.toml"),
+            home.join(".igrok/personas/reviewer.toml"),
             r#"instructions = "User persona""#,
         )
         .unwrap();
     std::fs::write(
-            workspace.join(".grok/roles/reviewer.toml"),
+            workspace.join(".igrok/roles/reviewer.toml"),
             r#"description = "Project reviewer""#,
         )
         .unwrap();
     std::fs::write(
-            workspace.join(".grok/personas/reviewer.toml"),
+            workspace.join(".igrok/personas/reviewer.toml"),
             r#"instructions = "Project persona""#,
         )
         .unwrap();
@@ -2676,7 +2676,7 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
     let base = SubagentsConfig::resolve_base_with_sources(
         true,
         &config,
-        Some(&home.join(".grok")),
+        Some(&home.join(".igrok")),
         &bundled,
     );
     let (roles, personas) = SubagentsConfig::effective_definition_maps(
@@ -2702,8 +2702,8 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
                 .as_deref(),
             Some("Inline persona")
         );
-    std::fs::remove_file(workspace.join(".grok/roles/reviewer.toml")).unwrap();
-    std::fs::remove_file(workspace.join(".grok/personas/reviewer.toml")).unwrap();
+    std::fs::remove_file(workspace.join(".igrok/roles/reviewer.toml")).unwrap();
+    std::fs::remove_file(workspace.join(".igrok/personas/reviewer.toml")).unwrap();
     let config = toml::from_str::<
         toml::Value,
     >(r#"
@@ -2714,7 +2714,7 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
     let base = SubagentsConfig::resolve_base_with_sources(
         true,
         &config,
-        Some(&home.join(".grok")),
+        Some(&home.join(".igrok")),
         &bundled,
     );
     let (roles, personas) = SubagentsConfig::effective_definition_maps(
@@ -2740,8 +2740,8 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
                 .as_deref(),
             Some("User persona")
         );
-    std::fs::remove_file(home.join(".grok/roles/reviewer.toml")).unwrap();
-    std::fs::remove_file(home.join(".grok/personas/reviewer.toml")).unwrap();
+    std::fs::remove_file(home.join(".igrok/roles/reviewer.toml")).unwrap();
+    std::fs::remove_file(home.join(".igrok/personas/reviewer.toml")).unwrap();
     let config = toml::from_str::<
         toml::Value,
     >(r#"
@@ -2752,7 +2752,7 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
     let base = SubagentsConfig::resolve_base_with_sources(
         true,
         &config,
-        Some(&home.join(".grok")),
+        Some(&home.join(".igrok")),
         &bundled,
     );
     let (roles, personas) = SubagentsConfig::effective_definition_maps(
@@ -2783,7 +2783,7 @@ fn bundled_personas_and_roles_have_lowest_priority_in_resolve_order() {
 fn render_io_summary_shows_bundled_for_bundled_personas() {
     let persona = SubagentPersona {
         instructions: Some("Bundled instructions".to_string()),
-        source_path: Some("/tmp/home/.grok/bundled/personas/reviewer.toml".to_string()),
+        source_path: Some("/tmp/home/.igrok/bundled/personas/reviewer.toml".to_string()),
         ..Default::default()
     };
     let summary = persona.render_io_summary("reviewer");
@@ -2969,7 +2969,7 @@ fn config_layers_user_overrides_managed() {
 /// A provider in a trusted disk layer resolves through the real
 /// `ConfigLayers` → `effective_config_disk_only` → parse seam that the
 /// direct-TOML parse tests bypass. (`ConfigLayers` has no project slot, so
-/// a repo `.grok/config.toml` structurally cannot supply one.)
+/// a repo `.igrok/config.toml` structurally cannot supply one.)
 #[test]
 fn auth_provider_honored_only_from_trusted_disk_layers() {
     let layers = ConfigLayers {
@@ -3127,7 +3127,7 @@ email_domain = "example.com"
         .unwrap();
     assert_eq!(cfg.feedback.user, None);
 }
-/// RCE guard: a project `.grok/config.toml` must never source
+/// RCE guard: a project `.igrok/config.toml` must never source
 /// `[feedback.user]` (its `command` runs `sh -c`).
 #[test]
 #[serial_test::serial]
@@ -3139,7 +3139,7 @@ fn project_config_never_sources_feedback_user() {
     let _sim = simulate_release_build();
     let repo = tempfile::tempdir().unwrap();
     git2::Repository::init(repo.path()).unwrap();
-    let grok = repo.path().join(".grok");
+    let grok = repo.path().join(".igrok");
     std::fs::create_dir_all(&grok).unwrap();
     std::fs::write(
             grok.join("config.toml"),
@@ -3423,8 +3423,8 @@ fn validate_hooks_path_rejects_outside_grok_home() {
     assert!(result.is_err());
     let msg = result.unwrap_err().to_string();
     assert!(
-            msg.contains("must be under ~/.grok/"),
-            "should mention ~/.grok/ restriction, got: {msg}"
+            msg.contains("must be under ~/.igrok/"),
+            "should mention ~/.igrok/ restriction, got: {msg}"
         );
 }
 #[test]
@@ -3435,7 +3435,7 @@ fn validate_hooks_path_rejects_traversal_attack() {
     assert!(result.is_err());
     let msg = result.unwrap_err().to_string();
     assert!(
-            msg.contains("must be under ~/.grok/"),
+            msg.contains("must be under ~/.igrok/"),
             "traversal should be rejected, got: {msg}"
         );
 }
@@ -3445,7 +3445,7 @@ fn validate_hooks_path_accepts_grok_hooks_subdir() {
     let valid_path = grok_home.join("hooks").join("my-hooks");
     let _ = std::fs::create_dir_all(&valid_path);
     let result = validate_hooks_path(valid_path.to_str().unwrap());
-    assert!(result.is_ok(), "path under ~/.grok/ should be accepted");
+    assert!(result.is_ok(), "path under ~/.igrok/ should be accepted");
 }
 #[test]
 fn managed_settings_disables_features_and_requirements_overrides() {
@@ -3524,7 +3524,7 @@ fn project_overlay_tracks_authoritative_trust_transitions() {
     let repo = tempfile::tempdir().unwrap();
     git2::Repository::init(repo.path()).unwrap();
     write_subagent_definitions(
-        &repo.path().join(".grok"),
+        &repo.path().join(".igrok"),
         &[("shared", "Project"), ("project-only", "Project")],
     );
     let mut base = SubagentsConfig::default();
@@ -3576,7 +3576,7 @@ fn project_overlay_tracks_authoritative_trust_transitions() {
 #[test]
 fn base_resolver_without_project_cwd_keeps_project_files_out() {
     let tmp = tempfile::tempdir().unwrap();
-    write_subagent_definitions(&tmp.path().join(".grok"), &[("project", "Project")]);
+    write_subagent_definitions(&tmp.path().join(".igrok"), &[("project", "Project")]);
     let base = SubagentsConfig::resolve_base_with_sources(
         false,
         &toml::Value::Table(Default::default()),
@@ -3589,7 +3589,7 @@ fn base_resolver_without_project_cwd_keeps_project_files_out() {
 #[test]
 fn explicit_grok_root_is_the_only_user_source() {
     let tmp = tempfile::tempdir().unwrap();
-    let ambient = tmp.path().join("ambient-home/.grok");
+    let ambient = tmp.path().join("ambient-home/.igrok");
     let configured = tmp.path().join("configured-grok-home");
     write_subagent_definitions(&ambient, &[("ambient", "Ambient")]);
     write_subagent_definitions(&configured, &[("configured", "Configured")]);
@@ -3626,7 +3626,7 @@ fn resolve_effective_plugins_config_gates_project_paths_on_folder_trust() {
     let _sim = simulate_release_build();
     let repo = tempfile::tempdir().unwrap();
     git2::Repository::init(repo.path()).unwrap();
-    let grok = repo.path().join(".grok");
+    let grok = repo.path().join(".igrok");
     std::fs::create_dir_all(&grok).unwrap();
     std::fs::write(
             grok.join("config.toml"),
@@ -3692,7 +3692,7 @@ fn discover_plugins_excludes_untrusted_configpath_plugin_end_to_end() {
     std::fs::create_dir_all(&plugin_dir).unwrap();
     std::fs::write(plugin_dir.join("plugin.json"), r#"{"name":"cfgpath-probe"}"#)
         .unwrap();
-    let grok = cwd.join(".grok");
+    let grok = cwd.join(".igrok");
     std::fs::create_dir_all(&grok).unwrap();
     std::fs::write(
             grok.join("config.toml"),
@@ -3761,7 +3761,7 @@ fn kill_switched_cold_cwd_stays_allowed_through_plugins_config_read() {
     let _sim = simulate_release_build();
     let repo = tempfile::tempdir().unwrap();
     git2::Repository::init(repo.path()).unwrap();
-    let grok = repo.path().join(".grok");
+    let grok = repo.path().join(".igrok");
     std::fs::create_dir_all(&grok).unwrap();
     std::fs::write(grok.join("config.toml"), "[plugins]\npaths = [\"./proj-plugin\"]\n")
         .unwrap();

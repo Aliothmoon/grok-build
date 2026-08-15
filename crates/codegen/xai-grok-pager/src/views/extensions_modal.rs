@@ -2267,7 +2267,7 @@ fn classify_hook_source(source_dir: &str) -> HookSourceMeta {
     let grok = xai_grok_config::grok_home();
     let source_path = std::path::Path::new(source_dir);
     // Plugin / installed-plugin dirs, under the user grok home (GROK_HOME-aware)
-    // or a project-scoped `{cwd}/.grok/<subdir>/`. Returns the first path
+    // or a project-scoped `{cwd}/.igrok/<subdir>/`. Returns the first path
     // component after the subdir (the plugin's install directory name).
     let plugin_name = |subdir: &str| -> Option<String> {
         let first_comp = |p: &std::path::Path| {
@@ -2282,7 +2282,7 @@ fn classify_hook_source(source_dir: &str) -> HookSourceMeta {
         {
             return Some(name);
         }
-        // Project-scoped `.grok/<subdir>/<name>` anywhere in the path.
+        // Project-scoped `.igrok/<subdir>/<name>` anywhere in the path.
         // Component-based so it works regardless of path separator.
         let comps: Vec<_> = source_path
             .components()
@@ -2290,7 +2290,7 @@ fn classify_hook_source(source_dir: &str) -> HookSourceMeta {
             .collect();
         comps
             .windows(3)
-            .find(|w| w[0] == ".grok" && w[1] == subdir && !w[2].is_empty())
+            .find(|w| w[0] == ".igrok" && w[1] == subdir && !w[2].is_empty())
             .map(|w| w[2].clone())
     };
     if let Some(name) = plugin_name("plugins").or_else(|| plugin_name("installed-plugins")) {
@@ -2316,7 +2316,7 @@ fn classify_hook_source(source_dir: &str) -> HookSourceMeta {
         };
     }
     // Project hooks
-    if source_dir.ends_with("/.grok/hooks") || source_dir.contains("/.grok/hooks/") {
+    if source_dir.ends_with("/.igrok/hooks") || source_dir.contains("/.igrok/hooks/") {
         return HookSourceMeta {
             label: "Project hooks".into(),
             kind: HookSourceKind::Project,
@@ -2442,8 +2442,8 @@ fn skill_source_str(skill: &SkillInfo) -> String {
             }
             xai_grok_tools::types::config_source::ConfigSource::Project { path } => {
                 let s = path.display().to_string();
-                if s.contains("/.grok/") {
-                    ".grok/skills".into()
+                if s.contains("/.igrok/") {
+                    ".igrok/skills".into()
                 } else if s.contains("/.claude/") {
                     ".claude/skills".into()
                 } else {
@@ -4140,15 +4140,15 @@ mod tests {
 
     #[test]
     fn derive_source_label_detects_project_scoped_plugins() {
-        // Regression: project-scoped `{cwd}/.grok/plugins/<name>/` must label as
+        // Regression: project-scoped `{cwd}/.igrok/plugins/<name>/` must label as
         // a (non-removable) plugin, not a removable "Custom" source. The user
         // grok-home branch is GROK_HOME-aware; this covers the project fallback.
-        let (label, is_custom) = derive_source_label("/repo/work/.grok/plugins/my-plugin/hooks");
+        let (label, is_custom) = derive_source_label("/repo/work/.igrok/plugins/my-plugin/hooks");
         assert_eq!(label, "Plugin: my-plugin");
         assert!(!is_custom);
 
         let (label, is_custom) =
-            derive_source_label("/repo/work/.grok/installed-plugins/vendor-abc123/skills");
+            derive_source_label("/repo/work/.igrok/installed-plugins/vendor-abc123/skills");
         assert_eq!(label, "Plugin: vendor-abc123");
         assert!(!is_custom);
     }
@@ -7071,7 +7071,7 @@ mod tests {
         project_z.scope = xai_grok_tools::implementations::skills::types::SkillScope::Local;
         project_z.config_source = Some(
             xai_grok_tools::types::config_source::ConfigSource::Project {
-                path: std::path::PathBuf::from("/repo/.grok/skills/zzz"),
+                path: std::path::PathBuf::from("/repo/.igrok/skills/zzz"),
             },
         );
         project_z.display_name = Some("zeta-proj".into());
@@ -7080,7 +7080,7 @@ mod tests {
         project_a.scope = xai_grok_tools::implementations::skills::types::SkillScope::Repo;
         project_a.config_source = Some(
             xai_grok_tools::types::config_source::ConfigSource::Project {
-                path: std::path::PathBuf::from("/repo/.grok/skills/aaa"),
+                path: std::path::PathBuf::from("/repo/.igrok/skills/aaa"),
             },
         );
         project_a.display_name = Some("alpha-proj".into());
@@ -7178,7 +7178,7 @@ mod tests {
         let hooks = vec![
             make_hook("c", "/zzz/custom", false),
             h_stop,
-            make_hook("a", "/repo/.grok/hooks", false),
+            make_hook("a", "/repo/.igrok/hooks", false),
             h_pre,
             h_notify,
             make_hook("b", "/aaa/custom", false),
@@ -7189,7 +7189,7 @@ mod tests {
         assert_eq!(
             dirs,
             [
-                "/repo/.grok/hooks",
+                "/repo/.igrok/hooks",
                 "/aaa/custom",
                 "/tmp/hooks-src",
                 "/zzz/custom"

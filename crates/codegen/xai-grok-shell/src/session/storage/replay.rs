@@ -41,7 +41,7 @@ pub enum ReplayLookupFallback {
 }
 
 /// Optional location hints so child `updates.jsonl` lookup can skip a full
-/// `~/.grok/sessions` RelocationView scan.
+/// `~/.igrok/sessions` RelocationView scan.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct ReplayPathHint<'a> {
     /// Parent session working directory; tried as

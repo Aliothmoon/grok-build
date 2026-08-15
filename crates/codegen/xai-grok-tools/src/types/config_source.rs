@@ -8,14 +8,14 @@ use serde::{Deserialize, Serialize};
 pub enum ConfigSource {
     /// Built-in / bundled with the binary.
     Builtin,
-    /// Bundled skill shipped with the binary (extracted to ~/.grok/skills/
+    /// Bundled skill shipped with the binary (extracted to ~/.igrok/skills/
     /// or injected via bundled skill dirs).
     Bundled { path: PathBuf },
-    /// Server-synced (e.g. ~/.grok/server-skills from the skill store).
+    /// Server-synced (e.g. ~/.igrok/server-skills from the skill store).
     Server { path: PathBuf },
-    /// Project-scoped: cwd/.grok/ or cwd/.claude/.
+    /// Project-scoped: cwd/.igrok/ or cwd/.claude/.
     Project { path: PathBuf },
-    /// User-scoped: ~/.grok/ or ~/.claude/.
+    /// User-scoped: ~/.igrok/ or ~/.claude/.
     User { path: PathBuf },
     /// Plugin-provided component.
     Plugin { plugin_name: String, path: PathBuf },

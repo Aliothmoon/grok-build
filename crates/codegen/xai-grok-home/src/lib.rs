@@ -1,10 +1,10 @@
 //! Single source of truth for the grok home directory: `$GROK_HOME` or
-//! `<home>/.grok`. Shared by `xai-grok-config` and `xai-fast-worktree`.
+//! `<home>/.igrok`. Shared by `xai-grok-config` and `xai-fast-worktree`.
 //!
 //! Which function to call:
 //! - [`grok_home`]: the usual choice, a cached, created path to build on.
 //! - [`user_grok_home`]: `None` instead of a cwd fallback when no home resolves.
-//! - [`default_grok_home`]: the `<home>/.grok` default, ignoring `$GROK_HOME`, so callers can detect an override.
+//! - [`default_grok_home`]: the `<home>/.igrok` default, ignoring `$GROK_HOME`, so callers can detect an override.
 //! - [`resolve_grok_home`]: a fresh, uncached resolve.
 //!
 //! TODO: collapse these getters by threading the path through config as an
@@ -14,15 +14,15 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-/// `<home>/.grok`, canonicalized via `dunce` (not `std::fs::canonicalize`,
+/// `<home>/.igrok`, canonicalized via `dunce` (not `std::fs::canonicalize`,
 /// which yields Windows `\\?\` verbatim paths).
 fn grok_home_in(home: &Path) -> PathBuf {
     dunce::canonicalize(home)
         .unwrap_or_else(|_| home.to_path_buf())
-        .join(".grok")
+        .join(".igrok")
 }
 
-/// `$GROK_HOME` verbatim when non-empty, else `<home>/.grok`. The env value is
+/// `$GROK_HOME` verbatim when non-empty, else `<home>/.igrok`. The env value is
 /// used as-is (not canonicalized) so it stays stable and comparable: callers do
 /// literal prefix checks against it, and downstream symlink guards must still see
 /// its original components.
@@ -44,7 +44,7 @@ pub fn resolve_grok_home() -> Option<PathBuf> {
     )
 }
 
-/// The default `<home>/.grok`, used when `$GROK_HOME` is unset.
+/// The default `<home>/.igrok`, used when `$GROK_HOME` is unset.
 pub fn default_grok_home() -> PathBuf {
     grok_home_in(&dirs::home_dir().unwrap_or_else(|| PathBuf::from(".")))
 }
@@ -97,7 +97,7 @@ mod tests {
         let resolved = resolve_grok_home_from(Some(&OsString::new()), Some(tmp.path()));
         assert_eq!(
             resolved,
-            Some(dunce::canonicalize(tmp.path()).unwrap().join(".grok"))
+            Some(dunce::canonicalize(tmp.path()).unwrap().join(".igrok"))
         );
     }
 
@@ -108,7 +108,7 @@ mod tests {
         // comparisons. No-op assertion on Unix.
         let home = default_grok_home();
         assert!(!home.to_string_lossy().starts_with(r"\\?\"));
-        assert!(home.ends_with(".grok"));
+        assert!(home.ends_with(".igrok"));
     }
 
     #[test]

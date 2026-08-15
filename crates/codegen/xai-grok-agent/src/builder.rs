@@ -44,7 +44,7 @@ pub struct AgentBuilder {
     /// Model-facing working directory for the system prompt `<user_info>` block.
     ///
     /// In forked sessions, the real `working_directory` is an overlay/worktree
-    /// path (e.g., `~/.grok/worktrees/project/fork-...-overlay`) that must stay
+    /// path (e.g., `~/.igrok/worktrees/project/fork-...-overlay`) that must stay
     /// hidden from the model. When set, `PromptContext.working_directory` uses
     /// this value instead of `self.working_directory`, so the system prompt
     /// shows the original project path. Tool execution (`ToolContext.cwd`,
@@ -594,7 +594,7 @@ impl AgentBuilder {
         self
     }
     /// Set the skills config (custom paths, ignore globs) from config.toml.
-    /// Without this, only auto-discovered skills (cwd/.grok/skills, ~/.grok/skills)
+    /// Without this, only auto-discovered skills (cwd/.igrok/skills, ~/.igrok/skills)
     /// are included — custom paths added via `x.ai/skills/add` would be ignored.
     pub fn with_skills_config(mut self, config: crate::prompt::skills::SkillsConfig) -> Self {
         self.skills_config = config;
@@ -1586,7 +1586,7 @@ mod tests {
         use xai_grok_tools::notification::ToolNotificationHandle;
         let tmp = tempfile::tempdir().unwrap();
         let write_skill = |dir: &str, content: &str| {
-            let d = tmp.path().join(".grok/skills").join(dir);
+            let d = tmp.path().join(".igrok/skills").join(dir);
             std::fs::create_dir_all(&d).unwrap();
             std::fs::write(d.join("SKILL.md"), content).unwrap();
         };

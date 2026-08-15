@@ -103,7 +103,7 @@ pub fn load_managed_config() -> std::io::Result<toml::Value> {
 
 /// Load a user-tier config layer from `<home>/<filename>`. With no resolvable
 /// user home, returns an empty table rather than reading a cwd-relative
-/// `.grok/<filename>` (the cwd-fallback would silently promote an untrusted
+/// `.igrok/<filename>` (the cwd-fallback would silently promote an untrusted
 /// project `.grok` to the user tier).
 fn load_user_config_layer(home: Option<&Path>, filename: &str) -> std::io::Result<toml::Value> {
     match home {

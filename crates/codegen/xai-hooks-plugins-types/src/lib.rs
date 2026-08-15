@@ -37,7 +37,7 @@ pub enum PluginScope {
 pub enum PluginOrigin {
     /// CLI `--plugin-dir`.
     CliOverride,
-    /// Project `.grok/plugins/`.
+    /// Project `.igrok/plugins/`.
     ProjectGrok,
     /// Project `.claude/plugins/`.
     ProjectClaude,
@@ -241,7 +241,7 @@ pub struct HookInfo {
     pub timeout_ms: u64,
     /// Source directory of the hook definition file.
     pub source_dir: String,
-    /// Whether this hook is disabled via ~/.grok/disabled-hooks.
+    /// Whether this hook is disabled via ~/.igrok/disabled-hooks.
     #[serde(default)]
     pub disabled: bool,
 }
@@ -657,7 +657,7 @@ mod tests {
     #[test]
     fn hooks_action_serde_roundtrip() {
         let action = HooksAction::Add {
-            path: "/home/user/.grok/hooks".into(),
+            path: "/home/user/.igrok/hooks".into(),
         };
         let json = serde_json::to_string(&action).unwrap();
         let parsed: HooksAction = serde_json::from_str(&json).unwrap();
@@ -746,7 +746,7 @@ mod tests {
             command: Some("check.sh".into()),
             url: None,
             timeout_ms: 5000,
-            source_dir: "/home/user/.grok/hooks".into(),
+            source_dir: "/home/user/.igrok/hooks".into(),
             disabled: false,
         };
         let json = serde_json::to_string(&hook).unwrap();
@@ -763,7 +763,7 @@ mod tests {
         let plugin = PluginInfo {
             name: "test-plugin".into(),
             id: "user/abc12345/test-plugin".into(),
-            root: "/home/user/.grok/plugins/test-plugin".into(),
+            root: "/home/user/.igrok/plugins/test-plugin".into(),
             scope: PluginScope::User,
             trusted: true,
             enabled: true,

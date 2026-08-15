@@ -394,7 +394,7 @@ fn worktree_session_preserves_subdirectory_offset() {
         &mut app,
     );
     let id = AgentId(0);
-    let worktree_root = PathBuf::from("/home/user/.grok/worktrees/repo/pager-123");
+    let worktree_root = PathBuf::from("/home/user/.igrok/worktrees/repo/pager-123");
     let session_cwd = worktree_root.join("crates/codegen/xai-grok-pager");
     let effects = dispatch(
         Action::TaskComplete(TaskResult::WorktreeSessionCreated {

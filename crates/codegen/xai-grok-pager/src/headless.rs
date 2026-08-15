@@ -1246,7 +1246,7 @@ pub async fn run_single_turn(
     crate::unified_log::flush_blocking().await;
 
     if track_active {
-        // Non-blocking flock so a slow/network ~/.grok can't hang exit.
+        // Non-blocking flock so a slow/network ~/.igrok can't hang exit.
         let _ = xai_grok_active_sessions::try_unregister(&session_id);
     }
     // A mid-turn ACP close already reaped above; return that error before the normal outcome.

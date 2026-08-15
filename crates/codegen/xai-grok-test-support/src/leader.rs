@@ -838,7 +838,7 @@ impl LeaderStdioClient {
 }
 
 pub fn leader_lock_path(home: &Path) -> PathBuf {
-    home.join(".grok").join("leader.lock")
+    home.join(".igrok").join("leader.lock")
 }
 
 pub fn read_leader_pid(home: &Path) -> Option<u32> {
@@ -886,7 +886,7 @@ pub async fn wait_for_replay_notifications(
 }
 
 pub fn leader_log(home: &Path) -> String {
-    std::fs::read_to_string(home.join(".grok").join("leader.log")).unwrap_or_default()
+    std::fs::read_to_string(home.join(".igrok").join("leader.log")).unwrap_or_default()
 }
 
 #[cfg(test)]

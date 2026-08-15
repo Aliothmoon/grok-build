@@ -27,7 +27,7 @@ async fn embedded_mode_boots_without_hanging_on_blocked_backend() {
     let base = format!("http://{addr}/v1");
 
     let home = tempfile::tempdir().expect("home");
-    let grok_home = home.path().join(".grok");
+    let grok_home = home.path().join(".igrok");
     std::fs::create_dir_all(&grok_home).unwrap();
     let env = [
         ("HOME", home.path().to_str().unwrap()),

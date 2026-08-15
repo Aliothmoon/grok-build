@@ -7,8 +7,8 @@ const EDIT_DONE: &str = "HOOK_EDIT_AFTER_ALLOW";
 const CHIME: &str = "permission_prompt_chime";
 
 fn seed_permission_prompt_hook(content: &ContentController, log: &Path) {
-    let hooks_dir = content.home().join(".grok").join("hooks");
-    std::fs::create_dir_all(&hooks_dir).expect("create ~/.grok/hooks");
+    let hooks_dir = content.home().join(".igrok").join("hooks");
+    std::fs::create_dir_all(&hooks_dir).expect("create ~/.igrok/hooks");
     let command = format!("printf '{CHIME}\\n' >> {}", log.display());
     let spec = json!({
         "hooks": {

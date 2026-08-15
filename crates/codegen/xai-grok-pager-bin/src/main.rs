@@ -166,7 +166,7 @@ async fn run_setup_command(json: bool) {
         }
         eprintln!("  grok setup");
         eprintln!();
-        eprintln!("Or add the key to ~/.grok/config.toml:");
+        eprintln!("Or add the key to ~/.igrok/config.toml:");
         eprintln!();
         eprintln!("  [endpoints]");
         eprintln!("  deployment_key = \"<your-key>\"");
@@ -545,7 +545,7 @@ async fn workspace_start(
     if !use_leader {
         anyhow::bail!(
             "`grok workspace` requires leader mode (the workspace is shared via the leader).\n\
-             Enable it with `[cli] use_leader = true` in ~/.grok/config.toml, or pass --leader."
+             Enable it with `[cli] use_leader = true` in ~/.igrok/config.toml, or pass --leader."
         );
     }
     ensure_authenticated(
@@ -1559,7 +1559,7 @@ fn flag_dashboard_at_startup_if_requested(args: &mut PagerArgs) -> Result<()> {
     if !xai_grok_pager::views::dashboard::dashboard_enabled() {
         anyhow::bail!(
             "the Agent Dashboard is disabled. Enable it by removing \
-             `[dashboard] enabled = false` from ~/.grok/config.toml and \
+             `[dashboard] enabled = false` from ~/.igrok/config.toml and \
              unsetting GROK_AGENT_DASHBOARD=0."
         );
     }
@@ -2353,7 +2353,7 @@ fn stdio_auto_update_enabled(
 /// True when `exe` is the binary `<grok_home>/bin/grok` resolves to, the
 /// install that adopts a staged update on respawn. Both sides are
 /// canonicalized; any failure reports unmanaged and skips the update. The
-/// npm shim hardcodes `~/.grok`, so a custom `GROK_HOME` skips here too.
+/// npm shim hardcodes `~/.igrok`, so a custom `GROK_HOME` skips here too.
 fn is_managed_install(exe: Option<std::path::PathBuf>, grok_home: &std::path::Path) -> bool {
     if grok_home.as_os_str().is_empty() {
         return false;

@@ -1,7 +1,7 @@
 //! Vendor compatibility configuration for third-party agent surfaces
 //! (skills, rules, agents, MCPs, hooks, sessions).
 //!
-//! Historically the agent hard-coded the dir lists `[".grok", ".agents",
+//! Historically the agent hard-coded the dir lists `[".igrok", ".agents",
 //! ".claude", ".cursor"]` (and `RULES_DIRS` / `AGENT_FILENAMES`) across ~6
 //! call sites in three crates. This module now owns the canonical cell registry
 //! used by runtime resolution and diagnostics (env var → config TOML → remote
@@ -361,11 +361,11 @@ impl CompatConfig {
     /// priority order. `.grok` and `.agents` are always included; `.claude`
     /// and `.cursor` are gated on their respective `skills` cell.
     ///
-    /// Replaces the hard-coded `[".grok", ".agents", ".claude", ".cursor"]`
+    /// Replaces the hard-coded `[".igrok", ".agents", ".claude", ".cursor"]`
     /// in `collect_skill_config_dirs`. When all cells are on, the returned
     /// list is identical to the historical constant.
     pub fn skill_config_dirs(&self) -> Vec<&'static str> {
-        let mut dirs = vec![".grok", ".agents"];
+        let mut dirs = vec![".igrok", ".agents"];
         if self.claude.skills {
             dirs.push(".claude");
         }
@@ -375,14 +375,14 @@ impl CompatConfig {
         dirs
     }
 
-    /// Subdirectories scanned for `*.md` rules files. `.grok/rules` is always
+    /// Subdirectories scanned for `*.md` rules files. `.igrok/rules` is always
     /// included; `.claude/rules` and `.cursor/rules` are gated on their
     /// respective `rules` cell.
     ///
     /// Replaces the hard-coded `RULES_DIRS` constant. When all cells are on,
     /// the returned list is identical.
     pub fn rules_dirs(&self) -> Vec<&'static str> {
-        let mut dirs = vec![".grok/rules"];
+        let mut dirs = vec![".igrok/rules"];
         if self.claude.rules {
             dirs.push(".claude/rules");
         }
@@ -511,10 +511,10 @@ mod tests {
 
     #[test]
     fn skill_config_dirs_all_on_matches_legacy_constant() {
-        // Historical constant was `[".grok", ".agents", ".claude", ".cursor"]`.
+        // Historical constant was `[".igrok", ".agents", ".claude", ".cursor"]`.
         assert_eq!(
             CompatConfig::default().skill_config_dirs(),
-            vec![".grok", ".agents", ".claude", ".cursor"]
+            vec![".igrok", ".agents", ".claude", ".cursor"]
         );
     }
 
@@ -522,23 +522,23 @@ mod tests {
     fn skill_config_dirs_gates_each_vendor() {
         let mut c = CompatConfig::default();
         c.cursor.skills = false;
-        assert_eq!(c.skill_config_dirs(), vec![".grok", ".agents", ".claude"]);
+        assert_eq!(c.skill_config_dirs(), vec![".igrok", ".agents", ".claude"]);
 
         c.claude.skills = false;
-        assert_eq!(c.skill_config_dirs(), vec![".grok", ".agents"]);
+        assert_eq!(c.skill_config_dirs(), vec![".igrok", ".agents"]);
 
         // Only the `cursor` cell on (`claude` off): `cursor` still appended last.
         let mut c2 = CompatConfig::default();
         c2.claude.skills = false;
-        assert_eq!(c2.skill_config_dirs(), vec![".grok", ".agents", ".cursor"]);
+        assert_eq!(c2.skill_config_dirs(), vec![".igrok", ".agents", ".cursor"]);
     }
 
     #[test]
     fn rules_dirs_all_on_matches_legacy_constant() {
-        // Historical `RULES_DIRS` was `[".grok/rules", ".claude/rules", ".cursor/rules"]`.
+        // Historical `RULES_DIRS` was `[".igrok/rules", ".claude/rules", ".cursor/rules"]`.
         assert_eq!(
             CompatConfig::default().rules_dirs(),
-            vec![".grok/rules", ".claude/rules", ".cursor/rules"]
+            vec![".igrok/rules", ".claude/rules", ".cursor/rules"]
         );
     }
 
@@ -546,9 +546,9 @@ mod tests {
     fn rules_dirs_gates_each_vendor() {
         let mut c = CompatConfig::default();
         c.cursor.rules = false;
-        assert_eq!(c.rules_dirs(), vec![".grok/rules", ".claude/rules"]);
+        assert_eq!(c.rules_dirs(), vec![".igrok/rules", ".claude/rules"]);
         c.claude.rules = false;
-        assert_eq!(c.rules_dirs(), vec![".grok/rules"]);
+        assert_eq!(c.rules_dirs(), vec![".igrok/rules"]);
     }
 
     #[test]

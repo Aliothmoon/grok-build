@@ -68,8 +68,8 @@ pub(crate) fn get_mcp_server_config(name: &str) -> Option<McpServerConfig> {
 }
 
 /// Get MCP server config by name, checking project-scoped configs first.
-/// Walks from cwd up to the git repo root checking `.grok/config.toml` at each level.
-/// Project-scoped `.grok/config.toml` entries override global `~/.grok/config.toml`
+/// Walks from cwd up to the git repo root checking `.igrok/config.toml` at each level.
+/// Project-scoped `.igrok/config.toml` entries override global `~/.igrok/config.toml`
 /// entries entirely (no deep merge of individual fields).
 /// Closer directories (cwd) take priority over further ones (repo root).
 pub(crate) fn get_mcp_server_config_with_project(
@@ -101,7 +101,7 @@ pub(crate) const MCP_SCOPE_PROJECT: &str = "project";
 const MCP_SCOPE_USER: &str = "user";
 
 /// Scope an MCP server resolves at: project when defined in any project-scoped
-/// `.grok/config.toml`, otherwise user (global config, `~/.claude.json`,
+/// `.igrok/config.toml`, otherwise user (global config, `~/.claude.json`,
 /// `~/.cursor/mcp.json`, etc.). See [`MCP_SCOPE_PROJECT`] / `MCP_SCOPE_USER`.
 pub(crate) fn mcp_server_scope(name: &str, cwd: &std::path::Path) -> &'static str {
     for config_path in crate::config::find_project_configs(cwd) {
@@ -201,11 +201,11 @@ pub fn worktree_pool_from_toml(root: &TomlValue) -> PoolConfig {
     }
 }
 
-/// Load MCP servers with project-scoped overrides from `.grok/config.toml`.
+/// Load MCP servers with project-scoped overrides from `.igrok/config.toml`.
 ///
 /// Merge strategy:
-/// 1. Load MCP servers from global `~/.grok/config.toml`
-/// 2. Walk from git repo root down to `cwd`, loading `.grok/config.toml` at each level
+/// 1. Load MCP servers from global `~/.igrok/config.toml`
+/// 2. Walk from git repo root down to `cwd`, loading `.igrok/config.toml` at each level
 ///    (matching the convention used by skills and AGENTS.md discovery)
 /// 3. Each level's entries replace entries with the same name entirely
 ///    (no deep merge — omitted fields fall back to defaults)
@@ -291,7 +291,7 @@ pub(crate) fn reload_mcp_servers_merged(
                 tracing::info!(
                     count = project_servers.len(),
                     path = %config_path.display(),
-                    "Loaded project-scoped MCP servers from .grok/config.toml"
+                    "Loaded project-scoped MCP servers from .igrok/config.toml"
                 );
                 for (name, config) in project_servers {
                     servers.insert(name, config);
@@ -948,7 +948,7 @@ fn set_mcp_server_enabled_field(
     }
 }
 
-/// Upsert an MCP server entry in `~/.grok/config.toml`.
+/// Upsert an MCP server entry in `~/.igrok/config.toml`.
 ///
 /// Creates or replaces `[mcp_servers.<name>]` with the given config.
 /// Also removes the server from `disabled_mcp_servers` if present (a newly
@@ -963,7 +963,7 @@ pub(crate) async fn save_mcp_server_config(
 /// Upsert an MCP server entry in the config file at `path`.
 ///
 /// Same semantics as [`save_mcp_server_config`] but targets an explicit
-/// config file, e.g. a project-scoped `.grok/config.toml`.
+/// config file, e.g. a project-scoped `.igrok/config.toml`.
 pub async fn save_mcp_server_config_at(
     path: &std::path::Path,
     server_name: &str,
@@ -1008,7 +1008,7 @@ pub async fn save_mcp_server_config_at(
     Ok(())
 }
 
-/// Delete an MCP server entry from `~/.grok/config.toml`.
+/// Delete an MCP server entry from `~/.igrok/config.toml`.
 ///
 /// Removes `[mcp_servers.<name>]`, cleans up `disabled_mcp_servers` and
 /// `[disabled_mcp_tools.<name>]` entries. Returns `true` if the entry existed.
@@ -1019,7 +1019,7 @@ pub(crate) async fn delete_mcp_server_config(server_name: &str) -> Result<bool> 
 /// Delete an MCP server entry from the config file at `path`.
 ///
 /// Same semantics as [`delete_mcp_server_config`] but targets an explicit
-/// config file, e.g. a project-scoped `.grok/config.toml`. OAuth credential
+/// config file, e.g. a project-scoped `.igrok/config.toml`. OAuth credential
 /// cleanup is keyed by server name against the global credential store, so it
 /// also drops credentials a same-named server in another config file uses.
 pub async fn delete_mcp_server_config_at(
@@ -1149,12 +1149,12 @@ fn diagnose_invalid_entry(name: &str, value: &TomlValue, error: &str) -> McpServ
             "`mcp_servers.{name}` has no transport. To run it, set `command = \"...\"` or \
              `url = \"...\"`. To turn it off, add \"{name}\" to `disabled_mcp_servers` instead of \
              leaving an entry with no transport. \
-             See ~/.grok/docs/user-guide/07-mcp-servers.md"
+             See ~/.igrok/docs/user-guide/07-mcp-servers.md"
         )
     } else {
         format!(
             "`mcp_servers.{name}` has an invalid transport: {error}. \
-             See ~/.grok/docs/user-guide/07-mcp-servers.md"
+             See ~/.igrok/docs/user-guide/07-mcp-servers.md"
         )
     };
     McpServerConfigProblem {
@@ -1194,7 +1194,7 @@ pub(crate) fn parse_mcp_servers_with_problems(root: &TomlValue) -> ParsedMcpServ
                         severity: McpServerProblemSeverity::Warning,
                         message: format!(
                             "`mcp_servers.{name}` has an unrecognized field `{field}`; it is \
-                             ignored. See ~/.grok/docs/user-guide/07-mcp-servers.md"
+                             ignored. See ~/.igrok/docs/user-guide/07-mcp-servers.md"
                         ),
                     });
                 }
@@ -1208,7 +1208,7 @@ pub(crate) fn parse_mcp_servers_with_problems(root: &TomlValue) -> ParsedMcpServ
                         message: format!(
                             "`mcp_servers.{name}` is enabled but its `{field}` is blank. \
                              Set a value, or add \"{name}\" to `disabled_mcp_servers` to turn it \
-                             off. See ~/.grok/docs/user-guide/07-mcp-servers.md"
+                             off. See ~/.igrok/docs/user-guide/07-mcp-servers.md"
                         ),
                     });
                     continue;
@@ -1666,7 +1666,7 @@ fn load_all_mcp_configs(cwd: &std::path::Path) -> IndexMap<String, McpServerConf
 /// Load all configured MCP servers with the scope each definition came from
 /// (`"user"` or `"project"`).
 ///
-/// Overlays project-scoped `.grok/config.toml` files from `cwd` up to the
+/// Overlays project-scoped `.igrok/config.toml` files from `cwd` up to the
 /// repo root onto the user-tier config, nearest definition winning — the same
 /// override semantics as [`get_mcp_server_config_with_project`].
 pub fn load_mcp_server_configs_with_project(
@@ -1791,14 +1791,14 @@ fn config_path() -> PathBuf {
     crate::util::grok_home::grok_home().join("config.toml")
 }
 
-/// Path to the user-level config file (`~/.grok/config.toml`).
+/// Path to the user-level config file (`~/.igrok/config.toml`).
 pub fn user_config_path() -> PathBuf {
     config_path()
 }
 
-/// Path to a project-level config file (`<dir>/.grok/config.toml`).
+/// Path to a project-level config file (`<dir>/.igrok/config.toml`).
 pub fn project_config_path(dir: &std::path::Path) -> PathBuf {
-    dir.join(".grok").join("config.toml")
+    dir.join(".igrok").join("config.toml")
 }
 
 /// True when the config file at `path` defines `[mcp_servers.<name>]`.
@@ -1878,7 +1878,7 @@ pub(crate) fn session_registry_from_toml_opt(root: &TomlValue) -> Option<bool> {
     }
 }
 
-/// Overrides `[cli] session_registry`; usable before `~/.grok/config.toml` exists.
+/// Overrides `[cli] session_registry`; usable before `~/.igrok/config.toml` exists.
 pub const SESSION_REGISTRY_ENV_VAR: &str = "GROK_SESSION_REGISTRY";
 
 pub(crate) fn session_registry_from_env_opt() -> Option<bool> {
@@ -2347,8 +2347,8 @@ enabled = false
         let root = toml::from_str::<TomlValue>(
             r#"
 [skills]
-paths = ["~/.grok/skills", "~/.grok/skills/special/SKILL.md"]
-ignore = ["~/.grok/skills/noisy/SKILL.md"]
+paths = ["~/.igrok/skills", "~/.igrok/skills/special/SKILL.md"]
+ignore = ["~/.igrok/skills/noisy/SKILL.md"]
 "#,
         )
         .unwrap();
@@ -2361,9 +2361,9 @@ ignore = ["~/.grok/skills/noisy/SKILL.md"]
             .unwrap_or_default();
         assert_eq!(
             cfg.paths,
-            vec!["~/.grok/skills", "~/.grok/skills/special/SKILL.md"]
+            vec!["~/.igrok/skills", "~/.igrok/skills/special/SKILL.md"]
         );
-        assert_eq!(cfg.ignore, vec!["~/.grok/skills/noisy/SKILL.md"]);
+        assert_eq!(cfg.ignore, vec!["~/.igrok/skills/noisy/SKILL.md"]);
     }
 
     #[test]
@@ -2587,7 +2587,7 @@ expose_image_base64 = true
     #[test]
     fn mcp_json_all_toml_names_includes_disabled() {
         let tmp = tempfile::tempdir().unwrap();
-        let grok_dir = tmp.path().join(".grok");
+        let grok_dir = tmp.path().join(".igrok");
         std::fs::create_dir_all(&grok_dir).unwrap();
         std::fs::write(
             grok_dir.join("config.toml"),
@@ -2771,8 +2771,8 @@ enabled = false
         let tmp = tempfile::tempdir().unwrap();
         git2::Repository::init(tmp.path()).unwrap();
         let nested = tmp.path().join("pkg");
-        std::fs::create_dir_all(nested.join(".grok")).unwrap();
-        std::fs::create_dir_all(tmp.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(nested.join(".igrok")).unwrap();
+        std::fs::create_dir_all(tmp.path().join(".igrok")).unwrap();
 
         let sticky = r#"
 # keep me
@@ -2780,8 +2780,8 @@ enabled = false
 command = "npx"
 enabled = false
 "#;
-        let ancestor = tmp.path().join(".grok").join("config.toml");
-        let nearer = nested.join(".grok").join("config.toml");
+        let ancestor = tmp.path().join(".igrok").join("config.toml");
+        let nearer = nested.join(".igrok").join("config.toml");
         std::fs::write(&ancestor, sticky).unwrap();
         std::fs::write(&nearer, sticky).unwrap();
 

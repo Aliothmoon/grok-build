@@ -215,7 +215,7 @@ impl TestSandboxBuilder {
     pub fn build(self) -> TestSandbox {
         let root = TempDir::new().expect("create test sandbox root");
         let home = root.path().join("home");
-        let grok_home = home.join(".grok");
+        let grok_home = home.join(".igrok");
         let workspace = root.path().join("workspace");
         let temp = root.path().join("tmp");
         for path in [&home, &grok_home, &workspace, &temp] {
@@ -524,7 +524,7 @@ mod tests {
         }
         assert_ne!(sandbox.home(), sandbox.workspace());
         assert_ne!(sandbox.home(), sandbox.temp_dir());
-        assert_eq!(sandbox.grok_home(), sandbox.home().join(".grok"));
+        assert_eq!(sandbox.grok_home(), sandbox.home().join(".igrok"));
     }
 
     #[test]
@@ -564,7 +564,7 @@ mod tests {
         let root = tempfile::tempdir().expect("create baseline fixture");
         baseline_env_from_parent(
             &root.path().join("home"),
-            &root.path().join("home/.grok"),
+            &root.path().join("home/.igrok"),
             &root.path().join("tmp"),
             parent_cwd,
             &parent_env,
@@ -628,7 +628,7 @@ mod tests {
         );
         let sandbox = TestSandbox {
             home: root.path().join("home"),
-            grok_home: root.path().join("home/.grok"),
+            grok_home: root.path().join("home/.igrok"),
             workspace: root.path().join("workspace"),
             temp: root.path().join("tmp"),
             root,

@@ -642,7 +642,7 @@ mod tests {
                 "workspace.discover_skills" => ok(serde_json::json!([{
                     "name": "my-skill",
                     "description": "A test skill",
-                    "path": "/workspace/.grok/skills/my-skill/SKILL.md",
+                    "path": "/workspace/.igrok/skills/my-skill/SKILL.md",
                     "scope": "local",
                 }])),
                 "workspace.discover_agents_md" => ok(serde_json::json!([{

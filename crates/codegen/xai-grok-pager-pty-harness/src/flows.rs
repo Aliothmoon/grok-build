@@ -127,8 +127,8 @@ fn seed_fake_oauth_raw(
     opted_out: bool,
     team_fields: &str,
 ) {
-    let grok_home = content.home().join(".grok");
-    std::fs::create_dir_all(&grok_home).expect("create temp .grok");
+    let grok_home = content.home().join(".igrok");
+    std::fs::create_dir_all(&grok_home).expect("create temp .igrok");
     std::fs::write(
         grok_home.join("auth.json"),
         format!(

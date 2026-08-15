@@ -130,7 +130,7 @@ impl Drop for EnvVarGuard {
 /// pre-sandbox tests.
 ///
 /// `grok_home()` is OnceLock-cached process-wide, so summaries land under the
-/// *resolved* home (possibly the real `~/.grok` when another test pinned the
+/// *resolved* home (possibly the real `~/.igrok` when another test pinned the
 /// cache first); cwd-encoded dirnames are tempdir-unique, and cleanup runs on
 /// drop so it survives assertion panics. Callers must hold
 /// `#[serial_test::serial(GROK_HOME)]`.

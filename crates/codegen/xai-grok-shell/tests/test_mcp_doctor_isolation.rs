@@ -1,6 +1,6 @@
 //! Isolated binary so `grok_home()`'s process-wide OnceLock initializes from
 //! our `GROK_HOME`. A lib-test EnvGuard is a no-op if another test already
-//! resolved it, and then doctor reads the real ~/.grok.
+//! resolved it, and then doctor reads the real ~/.igrok.
 
 use std::path::PathBuf;
 use std::sync::OnceLock;
@@ -9,7 +9,7 @@ fn isolate_home() -> &'static PathBuf {
     static HOME: OnceLock<PathBuf> = OnceLock::new();
     HOME.get_or_init(|| {
         let dir = tempfile::TempDir::new().unwrap().keep();
-        let grok = dir.join(".grok");
+        let grok = dir.join(".igrok");
         std::fs::create_dir_all(&grok).unwrap();
         std::fs::write(grok.join("config.toml"), "").unwrap();
         // SAFETY: this binary's only test; set before any grok_home() call.

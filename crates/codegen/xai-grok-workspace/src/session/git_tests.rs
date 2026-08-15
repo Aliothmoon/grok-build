@@ -727,26 +727,26 @@ fn test_effective_worktree_path_non_prefix() {
 
 #[test]
 fn test_effective_worktree_cwd_empty_offset() {
-    let result = effective_worktree_cwd("/home/user/.grok/worktrees/repo/ab-123-a", Path::new(""));
-    assert_eq!(result, "/home/user/.grok/worktrees/repo/ab-123-a");
+    let result = effective_worktree_cwd("/home/user/.igrok/worktrees/repo/ab-123-a", Path::new(""));
+    assert_eq!(result, "/home/user/.igrok/worktrees/repo/ab-123-a");
 }
 
 #[test]
 fn test_effective_worktree_cwd_single_level_offset() {
     let result =
-        effective_worktree_cwd("/home/user/.grok/worktrees/repo/ab-123-a", Path::new("src"));
-    assert_eq!(result, "/home/user/.grok/worktrees/repo/ab-123-a/src");
+        effective_worktree_cwd("/home/user/.igrok/worktrees/repo/ab-123-a", Path::new("src"));
+    assert_eq!(result, "/home/user/.igrok/worktrees/repo/ab-123-a/src");
 }
 
 #[test]
 fn test_effective_worktree_cwd_nested_offset() {
     let result = effective_worktree_cwd(
-        "/home/user/.grok/worktrees/repo/ab-123-b",
+        "/home/user/.igrok/worktrees/repo/ab-123-b",
         Path::new("packages/frontend/src"),
     );
     assert_eq!(
         result,
-        "/home/user/.grok/worktrees/repo/ab-123-b/packages/frontend/src"
+        "/home/user/.igrok/worktrees/repo/ab-123-b/packages/frontend/src"
     );
 }
 
@@ -832,7 +832,7 @@ fn test_effective_cwd_roundtrip_with_compute_offset() {
 
     let (offset, _git_root) = compute_subdir_offset(&sub.to_string_lossy());
 
-    let worktree_root = "/home/user/.grok/worktrees/myrepo/ab-test-a";
+    let worktree_root = "/home/user/.igrok/worktrees/myrepo/ab-test-a";
     let effective = effective_worktree_cwd(worktree_root, &offset);
     assert_eq!(effective, format!("{}/src/lib", worktree_root));
 }

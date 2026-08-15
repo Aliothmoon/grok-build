@@ -854,7 +854,7 @@ fn resolve_agent_definition_agent_profile_with_model_override() {
         std::env::remove_var("GROK_AGENT");
     }
     let tmp = tempfile::tempdir().unwrap();
-    let agents_dir = tmp.path().join(".grok").join("agents");
+    let agents_dir = tmp.path().join(".igrok").join("agents");
     std::fs::create_dir_all(&agents_dir).unwrap();
     std::fs::write(
             agents_dir.join("test-architect.md"),
@@ -5212,8 +5212,8 @@ fn repo_with_project_mcp_server() -> tempfile::TempDir {
     tmp
 }
 fn write_project_subagent_definitions(cwd: &std::path::Path) {
-    let roles = cwd.join(".grok/roles");
-    let personas = cwd.join(".grok/personas");
+    let roles = cwd.join(".igrok/roles");
+    let personas = cwd.join(".igrok/personas");
     std::fs::create_dir_all(&roles).unwrap();
     std::fs::create_dir_all(&personas).unwrap();
     std::fs::write(roles.join("probe.toml"), "description = \"Project role\"").unwrap();
@@ -5290,7 +5290,7 @@ fn subagent_spawn_context_reloads_project_definitions_after_trust_changes() {
         assert!(!revoked.subagent_personas.contains_key("probe"));
     });
 }
-/// End-to-end gate wiring: project `.grok/roles` / `personas` alone must drive
+/// End-to-end gate wiring: project `.igrok/roles` / `personas` alone must drive
 /// real `resolve_and_record` untrusted (not a forced `record_for_test` verdict),
 /// keep project defs out of Task spawn context, then re-admit them after grant.
 #[test]

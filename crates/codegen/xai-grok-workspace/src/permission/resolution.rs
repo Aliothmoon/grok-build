@@ -1,4 +1,4 @@
-//! Permission resolution engine: merges native `.grok/config.toml`,
+//! Permission resolution engine: merges native `.igrok/config.toml`,
 //! managed/enterprise settings, and (via `claude_settings`) `.claude`
 //! settings into the effective `PermissionConfig`; MCP/marketplace
 //! allowlists; always-approve policy.
@@ -190,7 +190,7 @@ fn extract_toml_permissions(
 
 /// Load `[permission]` rules from requirements.toml layers. Trust keys on the
 /// `is_system` flag (set at load, never from `path`): system → `SystemRequirements`,
-/// user `~/.grok` → `Requirements`, so [`is_admin_source`] trusts only the root tier.
+/// user `~/.igrok` → `Requirements`, so [`is_admin_source`] trusts only the root tier.
 fn load_requirements_permissions() -> Vec<Sourced<PermissionRule>> {
     xai_grok_config::requirements_layers()
         .into_iter()
@@ -211,8 +211,8 @@ fn load_requirements_permissions() -> Vec<Sourced<PermissionRule>> {
 
 /// Load `[permission]` rules from native Grok TOML config files:
 ///
-///   * `~/.grok/config.toml` (lowest priority)
-///   * Each `.grok/config.toml` from the git repo root down to `cwd`
+///   * `~/.igrok/config.toml` (lowest priority)
+///   * Each `.igrok/config.toml` from the git repo root down to `cwd`
 ///     (highest priority last) — same walk as folder-trust's
 ///     [`crate::project_config::find_project_configs`] so detector and loader
 ///     cannot disagree on which project configs exist.
@@ -222,8 +222,8 @@ fn load_requirements_permissions() -> Vec<Sourced<PermissionRule>> {
 fn load_config_toml_permissions(cwd: &Path, project_trusted: bool) -> Vec<Sourced<PermissionRule>> {
     let mut rules = Vec::new();
 
-    // Global `~/.grok/config.toml` first (lowest priority within this layer).
-    // Gated on user_grok_home() so a project's .grok/config.toml is never read as
+    // Global `~/.igrok/config.toml` first (lowest priority within this layer).
+    // Gated on user_grok_home() so a project's .igrok/config.toml is never read as
     // global permissions when neither GROK_HOME nor a home dir resolves.
     if let Some(global_path) = xai_grok_config::user_grok_home().map(|g| g.join("config.toml"))
         && global_path.is_file()
@@ -242,7 +242,7 @@ fn load_config_toml_permissions(cwd: &Path, project_trusted: bool) -> Vec<Source
 
     // Project-scoped configs walking from git root down to cwd, gated on trust.
     // An untrusted clone must not contribute allow/deny/ask rules via
-    // `.grok/config.toml` (same gate as project `.claude/settings.json`).
+    // `.igrok/config.toml` (same gate as project `.claude/settings.json`).
     if project_trusted {
         for path in crate::project_config::find_project_configs(cwd) {
             match xai_grok_config::load_config_file(&path) {
@@ -284,7 +284,7 @@ fn managed_config_permissions(
 /// `Allow Edit` rule appended to the Claude rules.
 ///
 /// `project_trusted` gates project-tier `.claude/settings.json` and
-/// `.grok/config.toml` permission rules (mirrors [`load_claude_env_with_project`]).
+/// `.igrok/config.toml` permission rules (mirrors [`load_claude_env_with_project`]).
 /// Global/user/admin tiers always load. Callers pass the folder-trust bridge
 /// verdict for local sessions; hub/cloud defaults trusted.
 pub async fn resolve_permission_config_with_fallback(
@@ -413,7 +413,7 @@ struct ResolveInputs<'a> {
     managed: &'a ManagedSettings,
     managed_config_rules: Vec<Sourced<PermissionRule>>,
     /// Folder-trust verdict for `cwd`. When false, project-tier
-    /// `.claude/settings.json` / `.grok/config.toml` permission rules are dropped
+    /// `.claude/settings.json` / `.igrok/config.toml` permission rules are dropped
     /// (global/user/admin tiers still load).
     project_trusted: bool,
 }
@@ -451,7 +451,7 @@ impl ResolveInputs<'static> {
 /// (`[ui] disable_bypass_permissions_mode = true`). Pair managed `dontAsk` with
 /// that pin when org policy must not be bypassable by `--always-approve`.
 ///
-/// `project_trusted` gates project-tier Claude settings and `.grok/config.toml`
+/// `project_trusted` gates project-tier Claude settings and `.igrok/config.toml`
 /// permission rules the same way [`load_claude_env_with_project`] gates env.
 /// Without this, an untrusted clone can ship `defaultMode: bypassPermissions`
 /// or broad allow rules and disable approval prompts.
@@ -1138,7 +1138,7 @@ fn requirements_lock_bool(ui: Option<&toml::Value>, key: &str, path: &Path) -> O
 }
 
 /// Pure form of [`yolo_disabled_by_policy`] over pre-loaded layers (testable
-/// without `~/.grok`); `path` only names the layer in a non-bool warning.
+/// without `~/.igrok`); `path` only names the layer in a non-bool warning.
 fn resolve_yolo_policy_block<'a>(
     requirement_layers: impl Iterator<Item = (&'a Path, &'a toml::Value)>,
 ) -> Option<&'static str> {

@@ -1083,7 +1083,7 @@ fn test_transform_cwd_rewrites_reasoning_sibling() {
     // via `transform_conversation_cwd` (see the `Reasoning(_)` arm),
     // which is a behavior improvement over the pre-refactor state
     // where it lived buried in AssistantItem.reasoning and was skipped.
-    let worktree = "/workspace/.grok/worktrees/project/ab-uuid-a";
+    let worktree = "/workspace/.igrok/worktrees/project/ab-uuid-a";
     let root = "/workspace/project";
 
     let mut items = vec![

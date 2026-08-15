@@ -6,8 +6,8 @@ fn test_tmp_download_path_is_unique_per_version_and_per_attempt() {
     // name onto a single `grok-0.1.tmp`; the helper must keep distinct
     // versions distinct AND make repeated attempts (same process, e.g.
     // concurrent tokio tasks) unique.
-    let dest_181 = std::path::Path::new("/home/u/.grok/downloads/grok-0.1.181-linux-x86_64");
-    let dest_182 = std::path::Path::new("/home/u/.grok/downloads/grok-0.1.182-linux-x86_64");
+    let dest_181 = std::path::Path::new("/home/u/.igrok/downloads/grok-0.1.181-linux-x86_64");
+    let dest_182 = std::path::Path::new("/home/u/.igrok/downloads/grok-0.1.182-linux-x86_64");
 
     let a = tmp_download_path(dest_181);
     let b = tmp_download_path(dest_182);
@@ -30,7 +30,7 @@ fn test_tmp_download_path_is_unique_per_version_and_per_attempt() {
     );
     assert_eq!(
         a.parent(),
-        std::path::Path::new("/home/u/.grok/downloads").into(),
+        std::path::Path::new("/home/u/.igrok/downloads").into(),
         "temp file must stay in the destination directory for atomic rename"
     );
 }
@@ -453,8 +453,8 @@ async fn test_atomic_symlink_swap_with_relative_target() {
 #[test]
 fn test_relative_symlink_target_sibling_dirs() {
     // bin/grok -> ../downloads/grok-0.1.203
-    let target = std::path::Path::new("/home/alice/.grok/downloads/grok-0.1.203");
-    let link = std::path::Path::new("/home/alice/.grok/bin/grok");
+    let target = std::path::Path::new("/home/alice/.igrok/downloads/grok-0.1.203");
+    let link = std::path::Path::new("/home/alice/.igrok/bin/grok");
     let result = relative_symlink_target(target, link);
     assert_eq!(
         result,
@@ -466,8 +466,8 @@ fn test_relative_symlink_target_sibling_dirs() {
 #[test]
 fn test_relative_symlink_target_same_dir() {
     // downloads/grok-latest -> grok-0.1.203 (same directory)
-    let target = std::path::Path::new("/home/alice/.grok/downloads/grok-0.1.203");
-    let link = std::path::Path::new("/home/alice/.grok/downloads/grok-latest");
+    let target = std::path::Path::new("/home/alice/.igrok/downloads/grok-0.1.203");
+    let link = std::path::Path::new("/home/alice/.igrok/downloads/grok-latest");
     let result = relative_symlink_target(target, link);
     assert_eq!(result, std::path::PathBuf::from("grok-0.1.203"));
 }
@@ -475,26 +475,26 @@ fn test_relative_symlink_target_same_dir() {
 #[cfg(unix)]
 #[test]
 fn test_relative_symlink_target_cross_tree_stays_absolute() {
-    // /usr/local/bin/grok -> /home/alice/.grok/downloads/grok-0.1.203
+    // /usr/local/bin/grok -> /home/alice/.igrok/downloads/grok-0.1.203
     // Different grandparents — should stay absolute.
-    let target = std::path::Path::new("/home/alice/.grok/downloads/grok-0.1.203");
+    let target = std::path::Path::new("/home/alice/.igrok/downloads/grok-0.1.203");
     let link = std::path::Path::new("/usr/local/bin/grok");
     let result = relative_symlink_target(target, link);
     assert_eq!(
         result,
-        std::path::PathBuf::from("/home/alice/.grok/downloads/grok-0.1.203")
+        std::path::PathBuf::from("/home/alice/.igrok/downloads/grok-0.1.203")
     );
 }
 
 #[cfg(unix)]
 #[tokio::test]
 async fn test_relative_symlink_survives_directory_move() {
-    // Simulates Docker bind-mount: create ~/.grok/ layout at path A,
+    // Simulates Docker bind-mount: create ~/.igrok/ layout at path A,
     // then move it to path B and verify the symlink still resolves.
     let dir = tempfile::tempdir().unwrap();
 
     // Create alice's layout
-    let alice = dir.path().join("alice").join(".grok");
+    let alice = dir.path().join("alice").join(".igrok");
     let alice_downloads = alice.join("downloads");
     let alice_bin = alice.join("bin");
     std::fs::create_dir_all(&alice_downloads).unwrap();
@@ -512,7 +512,7 @@ async fn test_relative_symlink_survives_directory_move() {
     // "Bind-mount" to bob: copy the entire .grok tree
     let bob_home = dir.path().join("bob");
     std::fs::create_dir_all(&bob_home).unwrap();
-    let bob = bob_home.join(".grok");
+    let bob = bob_home.join(".igrok");
     let copy_status = std::process::Command::new("cp")
         .args(["-a", alice.to_str().unwrap(), bob.to_str().unwrap()])
         .status()

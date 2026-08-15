@@ -228,10 +228,10 @@ impl WorktreeDb {
             .with_context(|| format!("failed to set journal mode {}", mode.as_str()))
     }
 
-    /// Open the default DB at `~/.grok/worktrees.db`.
+    /// Open the default DB at `~/.igrok/worktrees.db`.
     ///
     /// Discovers grok home via `xai_grok_home::resolve_grok_home` (`$GROK_HOME`,
-    /// else the canonicalized `<home>/.grok`).
+    /// else the canonicalized `<home>/.igrok`).
     /// Path is resolved fresh each call (env read plus a canonicalize) to
     /// support test overrides. Each call opens its own connection — callers in
     /// hot paths should cache the `WorktreeDb` instance.
@@ -466,7 +466,7 @@ pub fn now_epoch_secs() -> i64 {
         .as_secs() as i64
 }
 
-/// Resolve the grok home: `$GROK_HOME`, else `<home>/.grok`.
+/// Resolve the grok home: `$GROK_HOME`, else `<home>/.igrok`.
 pub fn resolve_grok_home() -> Result<PathBuf> {
     xai_grok_home::resolve_grok_home()
         .context("neither $GROK_HOME nor a home directory could be resolved")

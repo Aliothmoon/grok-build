@@ -260,7 +260,7 @@ fn session_tracker(
         .ok_or_else(|| WorkspaceError::SessionNotFound(sid.to_owned()))?;
     Ok(session.hunk_tracker().clone())
 }
-/// Ancestor hop budget when locating `.grok/repos.json`.
+/// Ancestor hop budget when locating `.igrok/repos.json`.
 ///
 /// Grove rewrite is one hop (`/workspace/app` → `/workspace`). Desktop
 /// workspaces can sit deeper than that; this is a backstop only. Primary
@@ -269,7 +269,7 @@ const REPOS_MANIFEST_MAX_ANCESTOR_HOPS: usize = 16;
 /// Directories to probe for [`REPOS_MANIFEST_RELATIVE_PATH`], starting at
 /// `root_cwd` (post-grove-rewrite agent cwd) and walking up.
 ///
-/// Does not escape the sandbox workspace or load `~/.grok/repos.json` /
+/// Does not escape the sandbox workspace or load `~/.igrok/repos.json` /
 /// `$GROK_HOME/repos.json` (user-global, not a provisioned workspace).
 fn repos_manifest_search_dirs(start: &std::path::Path) -> Vec<std::path::PathBuf> {
     let rel = xai_grok_workspace_types::rpc::repos::REPOS_MANIFEST_RELATIVE_PATH;
@@ -1801,7 +1801,7 @@ mod tests {
             base_branch: "main".into(),
             session_branch: "conv/1".into(),
         }]);
-        std::fs::create_dir_all(tmp.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(tmp.path().join(".igrok")).unwrap();
         std::fs::write(
             tmp.path()
                 .join(xai_grok_workspace_types::rpc::repos::REPOS_MANIFEST_RELATIVE_PATH),
@@ -1850,7 +1850,7 @@ mod tests {
             base_branch: "".into(),
             session_branch: "conv/1".into(),
         }]);
-        std::fs::create_dir_all(sandbox_ws.join(".grok")).unwrap();
+        std::fs::create_dir_all(sandbox_ws.join(".igrok")).unwrap();
         std::fs::write(
             sandbox_ws.join(xai_grok_workspace_types::rpc::repos::REPOS_MANIFEST_RELATIVE_PATH),
             one.to_json_bytes().unwrap(),
@@ -1909,7 +1909,7 @@ mod tests {
         assert!(dirs.contains(&home.path().join("src")));
         assert!(
             !dirs.iter().any(|d| d == home.path()),
-            "must not probe $HOME/.grok/repos.json: {dirs:?}"
+            "must not probe $HOME/.igrok/repos.json: {dirs:?}"
         );
     }
     /// Sync + `block_on` so `ENV_TEST_LOCK` is not held across `.await`
@@ -1929,9 +1929,9 @@ mod tests {
             base_branch: "main".into(),
             session_branch: "x".into(),
         }]);
-        std::fs::create_dir_all(home.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(home.path().join(".igrok")).unwrap();
         std::fs::write(
-            home.path().join(".grok").join("repos.json"),
+            home.path().join(".igrok").join("repos.json"),
             global.to_json_bytes().unwrap(),
         )
         .unwrap();
@@ -1945,7 +1945,7 @@ mod tests {
         let listed = rt.block_on(ops.repos_list()).expect("list");
         assert!(
             listed.repos.is_empty(),
-            "missing workspace manifest must not fall back to ~/.grok/repos.json: {:?}",
+            "missing workspace manifest must not fall back to ~/.igrok/repos.json: {:?}",
             listed.repos
         );
     }
@@ -2125,7 +2125,7 @@ mod tests {
             url: None,
             url_raw: None,
             timeout_ms: 5000,
-            source_dir: std::path::PathBuf::from("/home/u/.grok/hooks"),
+            source_dir: std::path::PathBuf::from("/home/u/.igrok/hooks"),
             extra_env: std::collections::HashMap::from([("FOO".to_string(), "bar".to_string())]),
             layer: xai_grok_hooks::config::HookProvenance::File,
         };
@@ -2255,7 +2255,7 @@ mod tests {
             url: None,
             url_raw: None,
             timeout_ms: 5000,
-            source_dir: std::path::PathBuf::from("/home/u/.grok/hooks"),
+            source_dir: std::path::PathBuf::from("/home/u/.igrok/hooks"),
             extra_env: std::collections::HashMap::from([("FOO".to_string(), "bar".to_string())]),
             layer: xai_grok_hooks::config::HookProvenance::Managed,
         };

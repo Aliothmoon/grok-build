@@ -96,7 +96,7 @@ pub(crate) fn discover_hook_source_paths(
             project.push(root.join(".claude").join("settings.json"));
             project.push(root.join(".claude").join("settings.local.json"));
         }
-        project.push(root.join(".grok").join("hooks"));
+        project.push(root.join(".igrok").join("hooks"));
         if include_cursor {
             project.push(root.join(".cursor").join("hooks.json"));
         }

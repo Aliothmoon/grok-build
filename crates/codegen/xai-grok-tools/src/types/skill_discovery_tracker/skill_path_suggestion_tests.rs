@@ -22,7 +22,7 @@ fn seeded_manager(skills: Vec<SkillInfo>) -> SkillManager {
 fn suggests_unique_registered_path_for_wrong_root() {
     let manager = seeded_manager(vec![skill(
         "code-review",
-        "/home/user/.grok/skills/code-review/SKILL.md",
+        "/home/user/.igrok/skills/code-review/SKILL.md",
     )]);
 
     let suggestion = manager
@@ -31,19 +31,19 @@ fn suggests_unique_registered_path_for_wrong_root() {
 
     assert_eq!(
         suggestion.display_path,
-        Path::new("/home/user/.grok/skills/code-review/SKILL.md")
+        Path::new("/home/user/.igrok/skills/code-review/SKILL.md")
     );
 }
 
 #[test]
 fn suggests_nothing_for_ambiguous_disabled_non_skill_or_exact_requests() {
-    let mut retired = skill("retired", "/home/user/.grok/skills/retired/SKILL.md");
+    let mut retired = skill("retired", "/home/user/.igrok/skills/retired/SKILL.md");
     retired.enabled = false;
     let manager = seeded_manager(vec![
-        skill("review", "/repo/.grok/skills/review/SKILL.md"),
-        skill("review", "/home/user/.grok/skills/review/SKILL.md"),
+        skill("review", "/repo/.igrok/skills/review/SKILL.md"),
+        skill("review", "/home/user/.igrok/skills/review/SKILL.md"),
         retired,
-        skill("solo", "/home/user/.grok/skills/solo/SKILL.md"),
+        skill("solo", "/home/user/.igrok/skills/solo/SKILL.md"),
     ]);
 
     // Control: the manager does produce a suggestion for a clean miss.
@@ -61,7 +61,7 @@ fn suggests_nothing_for_ambiguous_disabled_non_skill_or_exact_requests() {
         // Not a SKILL.md read.
         "/wrong/root/solo/README.md",
         // The read already targeted the registered path.
-        "/home/user/.grok/skills/solo/SKILL.md",
+        "/home/user/.igrok/skills/solo/SKILL.md",
     ] {
         assert!(
             manager.suggest_skill_path(Path::new(requested)).is_none(),
@@ -77,13 +77,13 @@ fn requested_path_among_same_named_registrations_is_ambiguous() {
     // keeps this ambiguous (no suggestion) rather than treating the sibling
     // as a unique alternate.
     let manager = seeded_manager(vec![
-        skill("review", "/repo/.grok/skills/review/SKILL.md"),
-        skill("review", "/home/user/.grok/skills/review/SKILL.md"),
+        skill("review", "/repo/.igrok/skills/review/SKILL.md"),
+        skill("review", "/home/user/.igrok/skills/review/SKILL.md"),
     ]);
 
     for requested in [
-        "/repo/.grok/skills/review/SKILL.md",
-        "/home/user/.grok/skills/review/SKILL.md",
+        "/repo/.igrok/skills/review/SKILL.md",
+        "/home/user/.igrok/skills/review/SKILL.md",
     ] {
         assert!(
             manager.suggest_skill_path(Path::new(requested)).is_none(),
@@ -94,17 +94,17 @@ fn requested_path_among_same_named_registrations_is_ambiguous() {
 
 #[test]
 fn includes_model_disabled_and_held_conditional_skills() {
-    let mut model_disabled = skill("manual", "/home/user/.grok/skills/manual/SKILL.md");
+    let mut model_disabled = skill("manual", "/home/user/.igrok/skills/manual/SKILL.md");
     model_disabled.disable_model_invocation = true;
     // `paths:`-gated skills are withheld from the listing but still registered,
     // whether seeded or dynamically discovered.
-    let mut gated = skill("gated", "/repo/.grok/skills/gated/SKILL.md");
+    let mut gated = skill("gated", "/repo/.igrok/skills/gated/SKILL.md");
     gated.paths = Some(vec!["src/**".to_owned()]);
     let mut manager = seeded_manager(vec![model_disabled, gated]);
 
     let mut dynamic = skill(
         "conditional",
-        "/home/user/.grok/skills/conditional/SKILL.md",
+        "/home/user/.igrok/skills/conditional/SKILL.md",
     );
     dynamic.paths = Some(vec!["src/**".to_owned()]);
     assert!(!manager.add_discovered(vec![dynamic]));
@@ -128,7 +128,7 @@ fn baseline_reload_updates_lookup_but_not_snapshot_names() {
     manager.seed(
         None,
         None,
-        vec![skill("initial", "/repo/.grok/skills/initial/SKILL.md")],
+        vec![skill("initial", "/repo/.igrok/skills/initial/SKILL.md")],
         None,
         None,
         None,
@@ -136,7 +136,7 @@ fn baseline_reload_updates_lookup_but_not_snapshot_names() {
 
     manager.update_startup_baseline(vec![skill(
         "reloaded",
-        "/repo/.grok/skills/reloaded/SKILL.md",
+        "/repo/.igrok/skills/reloaded/SKILL.md",
     )]);
 
     // Session-start names are immutable across reloads, while lookup follows
@@ -159,7 +159,7 @@ fn baseline_reload_updates_lookup_but_not_snapshot_names() {
 
 #[test]
 fn reload_disabling_a_discovered_skill_stops_suggesting_it() {
-    let path = "/repo/.grok/skills/review/SKILL.md";
+    let path = "/repo/.igrok/skills/review/SKILL.md";
     let mut manager = seeded_manager(Vec::new());
     manager.add_discovered(vec![skill("review", path)]);
 
@@ -183,18 +183,18 @@ fn reload_moving_a_skill_suggests_only_the_current_registration() {
     // current registration counts, so the moved path is unique.
     let mut manager = seeded_manager(vec![skill(
         "review",
-        "/repo/old/.grok/skills/review/SKILL.md",
+        "/repo/old/.igrok/skills/review/SKILL.md",
     )]);
     manager.update_startup_baseline(vec![skill(
         "review",
-        "/repo/new/.grok/skills/review/SKILL.md",
+        "/repo/new/.igrok/skills/review/SKILL.md",
     )]);
     let suggestion = manager
         .suggest_skill_path(Path::new("/wrong/root/review/SKILL.md"))
         .unwrap();
     assert_eq!(
         suggestion.display_path,
-        Path::new("/repo/new/.grok/skills/review/SKILL.md")
+        Path::new("/repo/new/.igrok/skills/review/SKILL.md")
     );
 
     // With a stale dynamic record left at the old path, lookup cannot tell a
@@ -203,11 +203,11 @@ fn reload_moving_a_skill_suggests_only_the_current_registration() {
     let mut manager = seeded_manager(Vec::new());
     manager.add_discovered(vec![skill(
         "review",
-        "/repo/old/.grok/skills/review/SKILL.md",
+        "/repo/old/.igrok/skills/review/SKILL.md",
     )]);
     manager.update_startup_baseline(vec![skill(
         "review",
-        "/repo/new/.grok/skills/review/SKILL.md",
+        "/repo/new/.igrok/skills/review/SKILL.md",
     )]);
     assert!(
         manager
@@ -218,7 +218,7 @@ fn reload_moving_a_skill_suggests_only_the_current_registration() {
 
 #[test]
 fn deduplicates_discovered_and_baseline_copies() {
-    let path = "/repo/.grok/skills/review/SKILL.md";
+    let path = "/repo/.igrok/skills/review/SKILL.md";
     let mut manager = seeded_manager(vec![skill("review", path)]);
     manager.add_discovered(vec![skill("review", path)]);
 
@@ -232,8 +232,8 @@ fn deduplicates_discovered_and_baseline_copies() {
 #[test]
 fn rewrites_worktree_paths_to_display_cwd_but_preserves_external_paths() {
     let mut manager = seeded_manager(vec![
-        skill("review", "/real/worktree/.grok/skills/review/SKILL.md"),
-        skill("external", "/home/user/.grok/skills/external/SKILL.md"),
+        skill("review", "/real/worktree/.igrok/skills/review/SKILL.md"),
+        skill("external", "/home/user/.igrok/skills/external/SKILL.md"),
     ]);
     manager.real_cwd_prefix = Some("/real/worktree".to_owned());
     manager.display_cwd = Some("/display/project".to_owned());
@@ -243,13 +243,13 @@ fn rewrites_worktree_paths_to_display_cwd_but_preserves_external_paths() {
             .suggest_skill_path(Path::new("/wrong/root/review/SKILL.md"))
             .unwrap()
             .display_path,
-        Path::new("/display/project/.grok/skills/review/SKILL.md")
+        Path::new("/display/project/.igrok/skills/review/SKILL.md")
     );
     assert_eq!(
         manager
             .suggest_skill_path(Path::new("/wrong/root/external/SKILL.md"))
             .unwrap()
             .display_path,
-        Path::new("/home/user/.grok/skills/external/SKILL.md")
+        Path::new("/home/user/.igrok/skills/external/SKILL.md")
     );
 }

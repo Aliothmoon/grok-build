@@ -1403,7 +1403,7 @@ fn tick_propagates_available_commands_to_bootstrap() {
     app.active_view = crate::app::app_view::ActiveView::Agent(id);
     let skill_meta = serde_json::json!({
         "scope": "user",
-        "path": "/home/user/.grok/skills/pick-best/SKILL.md",
+        "path": "/home/user/.igrok/skills/pick-best/SKILL.md",
     });
     app.agents.get_mut(&id).unwrap().session.available_commands = vec![
         acp::AvailableCommand::new("compact".to_string(), "Builtin".to_string()),

@@ -78,7 +78,7 @@ Skips ordinary permission prompts so tools run without waiting for a click. `den
 Keep always-approve for automation, and add deny rules for paths or commands you never want run:
 
 ```toml
-# project .grok/config.toml
+# project .igrok/config.toml
 [ui]
 permission_mode = "always-approve"
 
@@ -103,7 +103,7 @@ For automation that must run tools without interactive approval, use always-appr
 
 ### Disable always-approve (administrators)
 
-Organizations can prevent always-approve from being enabled via CLI, TUI, or `/always-approve`. Set this in `requirements.toml` (user-level under `~/.grok/`, or system-wide under `/etc/grok/` for enforcement users cannot remove):
+Organizations can prevent always-approve from being enabled via CLI, TUI, or `/always-approve`. Set this in `requirements.toml` (user-level under `~/.igrok/`, or system-wide under `/etc/grok/` for enforcement users cannot remove):
 
 ```toml
 [ui]
@@ -188,19 +188,19 @@ Permission rules can be global (all projects), project-scoped (one repository), 
 
 | Scope | File | Shared with teammates |
 |-------|------|-----------------------|
-| Global (all projects) | `~/.grok/config.toml` | No |
-| Project (committed) | `<project>/.grok/config.toml` | Yes (commit it) |
+| Global (all projects) | `~/.igrok/config.toml` | No |
+| Project (committed) | `<project>/.igrok/config.toml` | Yes (commit it) |
 | Project (personal) | `<project>/.claude/settings.local.json` | No (gitignore it) |
 | Interactive grants | Stored internally by Grok, per project | No |
 
 Notes on scoping:
 
-- Grok discovers a `.grok/config.toml` at every directory level from the repository root down to your working directory, so a subdirectory can add rules on top of the repo root's.
+- Grok discovers a `.igrok/config.toml` at every directory level from the repository root down to your working directory, so a subdirectory can add rules on top of the repo root's.
 - Rules from all scopes are merged into one rule set; `deny` > `ask` > `allow` applies across scopes, so a global `deny` cannot be overridden by a project `allow`.
 - Grok has no native `config.local.toml`. For personal, uncommitted rules in a project, use `.claude/settings.local.json`; Grok reads it directly (see [Claude Code Compatibility](#3-claude-code-compatibility-claudesettingsjson)).
 - Interactive "Always allow" decisions are stored outside the repository, scoped to the project (see [Interactive Approvals](#interactive-approvals-and-where-they-persist)).
 
-To stop prompts for a specific command in one project, add a narrow allow rule to that project's `.grok/config.toml` (or `.claude/settings.json`):
+To stop prompts for a specific command in one project, add a narrow allow rule to that project's `.igrok/config.toml` (or `.claude/settings.json`):
 
 ```toml
 [permission]
@@ -233,7 +233,7 @@ Rule syntax examples:
 
 See [Rule Matching Reference](#rule-matching-reference) for the exact matching semantics, including how chained commands and wildcards are evaluated.
 
-### 2. Native Configuration (`~/.grok/config.toml` and `.grok/config.toml`)
+### 2. Native Configuration (`~/.igrok/config.toml` and `.igrok/config.toml`)
 
 ```toml
 [permission]
@@ -251,9 +251,9 @@ The structured `tool` field accepts the lowercase names `bash`, `read`, `edit`, 
 
 Because `deny` always wins, you cannot combine these `allow` rules with a catch-all `deny` on `bash` to mean "only allow git/gh"; a `deny tool = "bash"` rule would block `git` and `gh` too. For deny-by-default, use `defaultMode: "dontAsk"` in `.claude/settings.json` or a `PreToolUse` hook (below).
 
-Rules from the global `~/.grok/config.toml` and every project `.grok/config.toml` (from the repo root down to your working directory) are merged into one rule set, alongside any `.claude/settings.json` rules.
+Rules from the global `~/.igrok/config.toml` and every project `.igrok/config.toml` (from the repo root down to your working directory) are merged into one rule set, alongside any `.claude/settings.json` rules.
 
-Managed configuration deployed by your organization also contributes `[permission]` rules: the system `/etc/grok/managed_config.toml`, and a user-level copy that Grok maintains automatically at `~/.grok/managed_config.toml`. Managed rules merge like rules from any other source, with two properties specific to managed `allow` rules: your own `deny` and `ask` rules win over a managed `allow` (severity ordering), and a catch-all managed `allow` is ignored when always-approve is locked off. For rules that users cannot edit away, use the root-owned system `/etc/grok/requirements.toml`.
+Managed configuration deployed by your organization also contributes `[permission]` rules: the system `/etc/grok/managed_config.toml`, and a user-level copy that Grok maintains automatically at `~/.igrok/managed_config.toml`. Managed rules merge like rules from any other source, with two properties specific to managed `allow` rules: your own `deny` and `ask` rules win over a managed `allow` (severity ordering), and a catch-all managed `allow` is ignored when always-approve is locked off. For rules that users cannot edit away, use the root-owned system `/etc/grok/requirements.toml`.
 
 Permission rules from every source are read once, when a session starts. Changes apply to the next session.
 
@@ -386,7 +386,7 @@ When a tool call requires approval, the permission prompt offers these choices:
 A narrower set of options remembers just the specific command, MCP tool, or web-fetch domain being prompted, for example "Always allow `cargo test`". These rows are off by default. Enable them with:
 
 ```toml
-# ~/.grok/config.toml
+# ~/.igrok/config.toml
 [ui]
 remember_tool_approvals = true
 ```
@@ -405,7 +405,7 @@ Commands on the [dangerous list](#dangerous-commands) (for example `git push` an
 
 Interactive grants are stored in Grok's own state directory under your home directory, scoped to the git repository you launched Grok in (its repository root), so a grant accepted at the repo root also applies in sessions started from a subdirectory of the same repository. Outside a git repository, grants are scoped to the launch directory, and each git worktree keeps its own grants. A grant made in one project never applies in another, grants are not written into the repository, and they are not meant to be hand-edited.
 
-Interactive grants are personal, per-machine state. For an allowlist you can review in code review and share with teammates, use declarative rules in the project's `.grok/config.toml` instead.
+Interactive grants are personal, per-machine state. For an allowlist you can review in code review and share with teammates, use declarative rules in the project's `.igrok/config.toml` instead.
 
 ---
 
@@ -417,7 +417,7 @@ A `PreToolUse` hook can enforce an allow list on the `Bash` tool that applies in
 
 ### Example: Allow Only `git` and `gh`
 
-**`~/.grok/hooks/git-gh-only.json`**
+**`~/.igrok/hooks/git-gh-only.json`**
 
 ```json
 {
@@ -438,7 +438,7 @@ A `PreToolUse` hook can enforce an allow list on the `Bash` tool that applies in
 }
 ```
 
-**`~/.grok/hooks/git-gh-only.sh`**
+**`~/.igrok/hooks/git-gh-only.sh`**
 
 ```bash
 #!/bin/sh
@@ -475,7 +475,7 @@ done
 ```
 
 ```bash
-chmod +x ~/.grok/hooks/git-gh-only.sh
+chmod +x ~/.igrok/hooks/git-gh-only.sh
 ```
 
 This hook denies every `Bash` command unless each chained segment starts with `git` or `gh`, and rejects command substitution, backgrounding, and redirection outright because it cannot verify what they execute. It works in every permission mode.
@@ -501,7 +501,7 @@ Install the `git-gh-only` hook above to deny every other `Bash` command. For den
 ### Read-Only Code Reviewer
 
 ```toml
-# .grok/config.toml
+# .igrok/config.toml
 [permission]
 rules = [
   { action = "allow", tool = "read" },
@@ -542,7 +542,7 @@ Recommended combination for untrusted code:
 
 1. **Prefer narrow patterns.** `Bash(git *)` grants less access than a bare `Bash` allow rule.
 2. **Combine layers.** `dontAsk`, narrow allow rules, a restrictive hook, and the sandbox each restrict independently.
-3. **Review project configuration from unfamiliar sources.** Project permission rules in `.grok/config.toml` and `.claude/settings.json`, including `allow` rules, apply without a separate trust prompt. Review them, and any project hooks, before working in an unfamiliar checkout (see the security notes in [10-hooks.md](10-hooks.md)).
+3. **Review project configuration from unfamiliar sources.** Project permission rules in `.igrok/config.toml` and `.claude/settings.json`, including `allow` rules, apply without a separate trust prompt. Review them, and any project hooks, before working in an unfamiliar checkout (see the security notes in [10-hooks.md](10-hooks.md)).
 4. **Test your policy.** With `defaultMode: "dontAsk"` set (or your `PreToolUse` hook installed), run representative commands and confirm what is blocked.
 5. **Treat the read-only command list as a convenience, not a security boundary.**
 

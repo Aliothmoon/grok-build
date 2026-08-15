@@ -518,7 +518,7 @@ fn protected_grok_config_file_with_home(
         Some("sandbox.toml") => ProtectedEditReason::GrokSandbox,
         _ => return None,
     };
-    let in_dot_grok = components.len() >= 2 && components[components.len() - 2] == ".grok";
+    let in_dot_grok = components.len() >= 2 && components[components.len() - 2] == ".igrok";
     let in_grok_home = || grok_home_matches(user_grok_home, |home| path.parent() == Some(home));
     (in_dot_grok || in_grok_home()).then_some(reason)
 }
@@ -541,8 +541,8 @@ fn path_is_under_user_grok_hook_root(path: &Path, grok_home: &Path) -> bool {
 }
 
 fn protected_grok_hook_root(path: &Path, components: &[&str]) -> bool {
-    components.windows(2).any(|pair| pair == [".grok", "hooks"])
-        || components.ends_with(&[".grok", "hooks-paths"])
+    components.windows(2).any(|pair| pair == [".igrok", "hooks"])
+        || components.ends_with(&[".igrok", "hooks-paths"])
         || grok_home_matches(xai_grok_config::user_grok_home().as_deref(), |home| {
             path_is_under_user_grok_hook_root(path, home)
         })
@@ -1447,8 +1447,8 @@ mod tests {
             "/etc",
             "/etc/grok-test",
             "/work/subdir/../.git/hooks/pre-commit",
-            "/home/user/.grok/sandbox.toml",
-            "/work/project/.grok/sandbox.toml",
+            "/home/user/.igrok/sandbox.toml",
+            "/work/project/.igrok/sandbox.toml",
         ] {
             assert!(
                 edit_target_protection(Path::new(path)).is_some(),
@@ -1457,7 +1457,7 @@ mod tests {
         }
         for path in [
             "/work/src/main.rs",
-            "/work/project/.grok/config.toml/backup",
+            "/work/project/.igrok/config.toml/backup",
             "/work/project/sandbox.toml",
             "/work/project/requirements.toml",
             "/work/project/managed_config.toml",
@@ -1500,7 +1500,7 @@ mod tests {
     fn edit_target_protection_classifies_reasons() {
         let cases = [
             (
-                "/home/user/.grok/hooks/evil.json",
+                "/home/user/.igrok/hooks/evil.json",
                 ProtectedEditReason::HookRoot,
             ),
             ("/work/.git/hooks/pre-commit", ProtectedEditReason::GitHooks),
@@ -1508,23 +1508,23 @@ mod tests {
             ("/home/user/.zshrc", ProtectedEditReason::StartupFile),
             ("/etc/hosts", ProtectedEditReason::Etc),
             (
-                "/home/user/.grok/config.toml",
+                "/home/user/.igrok/config.toml",
                 ProtectedEditReason::GrokConfig,
             ),
             (
-                "/home/user/.grok/sandbox.toml",
+                "/home/user/.igrok/sandbox.toml",
                 ProtectedEditReason::GrokSandbox,
             ),
             (
-                "/work/project/.grok/sandbox.toml",
+                "/work/project/.igrok/sandbox.toml",
                 ProtectedEditReason::GrokSandbox,
             ),
             (
-                "/home/user/.grok/managed_config.toml",
+                "/home/user/.igrok/managed_config.toml",
                 ProtectedEditReason::GrokConfig,
             ),
             (
-                "/home/user/.grok/requirements.toml",
+                "/home/user/.igrok/requirements.toml",
                 ProtectedEditReason::GrokConfig,
             ),
             (
@@ -1554,14 +1554,14 @@ mod tests {
     #[test]
     fn sensitive_edit_targets_include_hook_roots() {
         for path in [
-            "/home/user/.grok/hooks/evil.json",
-            "/home/user/.grok/hooks/nested/deep.json",
-            "/home/user/.grok/hooks-paths",
+            "/home/user/.igrok/hooks/evil.json",
+            "/home/user/.igrok/hooks/nested/deep.json",
+            "/home/user/.igrok/hooks-paths",
             "/home/user/.claude/settings.json",
             "/home/user/.claude/settings.local.json",
             "/home/user/.cursor/hooks.json",
-            "/work/project/.grok/hooks/local.json",
-            "/work/project/.grok/hooks-paths",
+            "/work/project/.igrok/hooks/local.json",
+            "/work/project/.igrok/hooks-paths",
         ] {
             assert!(
                 edit_target_protection(Path::new(path)).is_some(),
@@ -1569,8 +1569,8 @@ mod tests {
             );
         }
         for path in [
-            "/home/user/.grok/hooks-disabled/note.json",
-            "/home/user/.grok/hooks-evil/note.json",
+            "/home/user/.igrok/hooks-disabled/note.json",
+            "/home/user/.igrok/hooks-evil/note.json",
             "/home/user/project/src/hooks.json",
             "/home/user/.claude/other.json",
             "/home/user/.cursor/settings.json",
@@ -1631,7 +1631,7 @@ mod tests {
             ws.path().join("module-hooks-link"),
         )
         .unwrap();
-        let grok_hook = outside.path().join(".grok/hooks/evil.json");
+        let grok_hook = outside.path().join(".igrok/hooks/evil.json");
         std::fs::create_dir_all(grok_hook.parent().unwrap()).unwrap();
         std::fs::write(&grok_hook, b"{}").unwrap();
         symlink(&grok_hook, ws.path().join("grok-hook-link")).unwrap();

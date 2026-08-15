@@ -1,6 +1,6 @@
 //! Standalone workspace ToolServer for remote sandboxes.
 //!
-//! Reads OIDC credentials from `~/.grok/auth.json`, connects to a
+//! Reads OIDC credentials from `~/.igrok/auth.json`, connects to a
 //! server, exposes workspace tools, and refreshes tokens
 //! automatically.
 use clap::Parser;
@@ -121,7 +121,7 @@ struct Args {
     /// instead of widening to the built-in default catalog.
     #[arg(long)]
     require_explicit_toolset: bool,
-    /// Trust project-scoped LSP servers from `<repo>/.grok/lsp.json`.
+    /// Trust project-scoped LSP servers from `<repo>/.igrok/lsp.json`.
     /// Defaults off; sandbox opts in only after workspace trust is established.
     #[arg(
         long,

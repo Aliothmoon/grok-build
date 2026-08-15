@@ -5,8 +5,8 @@
 //! and assert the mode banner / status shows Auto without conflating
 //! Always-Approve.
 //!
-//! Auth: seeds `HOME/.grok/auth.json` from `GROK_AUTH_JSON` (path) or the
-//! developer's `~/.grok/auth.json` so the pager skips device-login when
+//! Auth: seeds `HOME/.igrok/auth.json` from `GROK_AUTH_JSON` (path) or the
+//! developer's `~/.igrok/auth.json` so the pager skips device-login when
 //! credentials exist. Without auth the test records an environmental
 //! failure (login screen) and still asserts the harness API surface.
 //!
@@ -27,7 +27,7 @@ const WELCOME_SCREEN_SENTINEL: &str = "Quit";
 /// Back-tab / Shift+Tab (CSI Z) — pager binds this to CycleMode.
 const SHIFT_TAB: &[u8] = b"\x1b[Z";
 
-/// Prefer explicit path, else the user's real `~/.grok/auth.json`.
+/// Prefer explicit path, else the user's real `~/.igrok/auth.json`.
 fn auth_json_source() -> Option<PathBuf> {
     if let Ok(p) = std::env::var("GROK_AUTH_JSON") {
         let pb = PathBuf::from(p);
@@ -36,7 +36,7 @@ fn auth_json_source() -> Option<PathBuf> {
         }
     }
     dirs_next_home()
-        .map(|h| h.join(".grok/auth.json"))
+        .map(|h| h.join(".igrok/auth.json"))
         .filter(|p| p.is_file())
 }
 
@@ -68,7 +68,7 @@ fn prepare_sandbox(sandbox: &mut TestSandbox, gate_on: bool) -> Vec<(String, Str
             );
         }
     } else {
-        eprintln!("pty_auto_mode: no ~/.grok/auth.json — may hit device login");
+        eprintln!("pty_auto_mode: no ~/.igrok/auth.json — may hit device login");
     }
 
     let home_s = home.display().to_string();

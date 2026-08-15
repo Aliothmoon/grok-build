@@ -1220,7 +1220,7 @@ mod tests {
             None,
             vec![make_skill(
                 "deploy",
-                "/overlay/worktree/.grok/skills/deploy/SKILL.md",
+                "/overlay/worktree/.igrok/skills/deploy/SKILL.md",
             )],
             Some("/home/user/project".to_string()),
             None,
@@ -1242,7 +1242,7 @@ mod tests {
             None,
             vec![make_skill(
                 "deploy",
-                "/real/path/.grok/skills/deploy/SKILL.md",
+                "/real/path/.igrok/skills/deploy/SKILL.md",
             )],
             None,
             None,

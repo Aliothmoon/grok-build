@@ -23,7 +23,7 @@ Examples:
   # Add a remote server with an authentication header
   grok mcp add --transport http api https://mcp.example.com/mcp --header \"Authorization: Bearer YOUR_TOKEN\"
 
-  # Add to the project config (./.grok/config.toml) instead of ~/.grok/config.toml
+  # Add to the project config (./.igrok/config.toml) instead of ~/.igrok/config.toml
   grok mcp add --scope project github -- npx -y @modelcontextprotocol/server-github";
 
 #[derive(Debug, clap::Args, Clone)]
@@ -46,9 +46,9 @@ pub enum McpTransport {
 /// Which config file an MCP server definition is written to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum McpScope {
-    /// `~/.grok/config.toml`, available in all your projects
+    /// `~/.igrok/config.toml`, available in all your projects
     User,
-    /// `./.grok/config.toml`, shared with everyone working in this directory
+    /// `./.igrok/config.toml`, shared with everyone working in this directory
     Project,
 }
 
@@ -121,7 +121,7 @@ pub struct AddArgs {
     #[arg(short = 't', long, value_enum)]
     transport: Option<McpTransport>,
 
-    /// Config to write to: user (~/.grok/config.toml) or project (./.grok/config.toml)
+    /// Config to write to: user (~/.igrok/config.toml) or project (./.igrok/config.toml)
     #[arg(short = 's', long, value_enum, default_value = "user")]
     scope: McpScope,
 
@@ -671,7 +671,7 @@ async fn run_remove(name: &str, requested_scope: Option<McpScope>) -> Result<()>
     println!("File modified: {}", scope_display(scope, &path));
 
     // A scoped delete can leave the name defined in the other scope or an
-    // ancestor .grok/config.toml, where it still resolves for sessions.
+    // ancestor .igrok/config.toml, where it still resolves for sessions.
     let still_user_defined = mcp_server_defined_at(&user_config_path(), name);
     if let Some((survivor_scope, remaining)) =
         surviving_definition(still_user_defined, find_project_site())
@@ -1162,7 +1162,7 @@ mod tests {
     fn grok_com_known_only_with_toml_definition() {
         // Unique name: `grok_home()` is process-wide OnceLock, so GROK_HOME
         // EnvGuard is a no-op if another test already resolved it. A leftover
-        // `grok_com_*` in the real ~/.grok disabled list would fail an orphan
+        // `grok_com_*` in the real ~/.igrok disabled list would fail an orphan
         // assertion on a well-known name.
         let name = format!("grok_com_orphan_{}", uuid::Uuid::new_v4().as_simple());
 
@@ -1174,9 +1174,9 @@ mod tests {
         );
 
         let defined = tempfile::tempdir().unwrap();
-        std::fs::create_dir_all(defined.path().join(".grok")).unwrap();
+        std::fs::create_dir_all(defined.path().join(".igrok")).unwrap();
         std::fs::write(
-            defined.path().join(".grok").join("config.toml"),
+            defined.path().join(".igrok").join("config.toml"),
             format!(
                 r#"
 [mcp_servers.{name}]
@@ -1227,7 +1227,7 @@ url = "https://mcp.example.test/sse"
     #[test]
     fn select_remove_site_covers_scope_presence_matrix() {
         let user = xai_grok_shell::util::config::user_config_path();
-        let project = PathBuf::from("/repo/.grok/config.toml");
+        let project = PathBuf::from("/repo/.igrok/config.toml");
 
         // No scope: single hits resolve, both scopes is ambiguous, neither is
         // not found.
@@ -1272,7 +1272,7 @@ url = "https://mcp.example.test/sse"
     #[test]
     fn surviving_definition_prefers_project_then_user() {
         let user = xai_grok_shell::util::config::user_config_path();
-        let project = PathBuf::from("/repo/.grok/config.toml");
+        let project = PathBuf::from("/repo/.igrok/config.toml");
 
         // The mirror of the remove note: a user-scope delete with a project
         // survivor (and vice versa) must still report the remaining site.

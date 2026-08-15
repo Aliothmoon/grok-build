@@ -213,7 +213,7 @@ pub fn resolve_repo_sources(
 /// Default `.gitignore` seeded into a fresh app workspace (secrets never enter
 /// git; workspace hygiene). Kept in lockstep with the
 /// export seed (`.project_id`, `.github_repo`) and local `info/exclude`
-/// (`.grok/`) so BYO remotes / user commits do not pick up machine state.
+/// (`.igrok/`) so BYO remotes / user commits do not pick up machine state.
 pub const DEFAULT_GITIGNORE: &str = "\
 # Seeded by Grok app workspaces. Secrets and machine state never belong in git;
 # they live in the env/secret store, not the working tree.
@@ -247,7 +247,7 @@ build/
 # App-workspace machine state (must not enter BYO remotes)
 .project_id
 .github_repo
-.grok/
+.igrok/
 ";
 
 #[cfg(test)]
@@ -419,7 +419,7 @@ mod tests {
         assert!(DEFAULT_GITIGNORE.contains(".env"));
         assert!(DEFAULT_GITIGNORE.contains(".project_id"));
         assert!(DEFAULT_GITIGNORE.contains(".github_repo"));
-        assert!(DEFAULT_GITIGNORE.contains(".grok/"));
+        assert!(DEFAULT_GITIGNORE.contains(".igrok/"));
         assert!(DEFAULT_GITIGNORE.contains("node_modules/"));
     }
 

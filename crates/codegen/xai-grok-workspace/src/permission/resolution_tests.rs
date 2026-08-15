@@ -2175,7 +2175,7 @@ fn untrusted_project_claude_permissions_are_not_honored() {
     );
 }
 
-/// Untrusted clone must not contribute project `.grok/config.toml` [permission].
+/// Untrusted clone must not contribute project `.igrok/config.toml` [permission].
 ///
 /// Sync + `block_on` so `ENV_LOCK` is not held across `.await` (clippy
 /// `await_holding_lock`). Does not assert exact global rule counts:
@@ -2203,7 +2203,7 @@ allow = ["Bash(git status)"]
     let tmp = tempfile::tempdir().unwrap();
     // Bound project discovery to this temp dir (canonical walker uses git root).
     git2::Repository::init(tmp.path()).expect("git init");
-    let grok = tmp.path().join(".grok");
+    let grok = tmp.path().join(".igrok");
     std::fs::create_dir_all(&grok).unwrap();
     std::fs::write(
         grok.join("config.toml"),
@@ -2687,7 +2687,7 @@ fn catchall_allow_covers_freeform_dimensions() {
 #[test]
 fn admin_source_trusts_only_root_owned_tiers() {
     // Only managed-settings and the system-dir requirements layer are admin;
-    // the user-writable `~/.grok/requirements.toml` is not, despite its path.
+    // the user-writable `~/.igrok/requirements.toml` is not, despite its path.
     let p = std::path::PathBuf::from("x");
     assert!(is_admin_source(&RequirementSource::ManagedSettings {
         path: p.clone()
@@ -2696,7 +2696,7 @@ fn admin_source_trusts_only_root_owned_tiers() {
         path: "/etc/grok/requirements.toml".into(),
     }));
     assert!(!is_admin_source(&RequirementSource::Requirements {
-        path: "/home/u/.grok/requirements.toml".into(),
+        path: "/home/u/.igrok/requirements.toml".into(),
     }));
     assert!(!is_admin_source(&RequirementSource::ManagedConfig {
         path: "/etc/grok/managed_config.toml".into(),
@@ -2730,7 +2730,7 @@ fn drop_untrusted_catchall_allows_is_source_aware() {
         sourced(
             allow_any(Some("**/*")),
             RequirementSource::Requirements {
-                path: "/home/u/.grok/requirements.toml".into(),
+                path: "/home/u/.igrok/requirements.toml".into(),
             },
         ),
         // Managed config: defaults tier, untrusted even from /etc/grok.
@@ -2809,7 +2809,7 @@ fn drop_untrusted_catchall_allows_is_source_aware() {
 fn drop_untrusted_freeform_catchalls_respects_source_and_scope() {
     let sourced = |value, source| Sourced { value, source };
     let untrusted = || RequirementSource::Requirements {
-        path: "/home/u/.grok/requirements.toml".into(),
+        path: "/home/u/.igrok/requirements.toml".into(),
     };
     let admin = || RequirementSource::SystemRequirements {
         path: "/etc/grok/requirements.toml".into(),

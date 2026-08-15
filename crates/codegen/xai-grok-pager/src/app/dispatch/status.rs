@@ -195,7 +195,7 @@ fn log_coding_data_consent_selected(
 }
 
 /// Set coding-data-sharing preference. SHELL-owned, auth-metadata-backed
-/// (persists via ACP ext-request, NOT `~/.grok/config.toml`).
+/// (persists via ACP ext-request, NOT `~/.igrok/config.toml`).
 pub(super) fn set_coding_data_sharing(
     app: &mut AppView,
     opted_in: bool,

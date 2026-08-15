@@ -782,11 +782,11 @@ fn grok_home() -> std::path::PathBuf {
     xai_fast_worktree::resolve_grok_home().unwrap_or_else(|_| {
         dirs::home_dir()
             .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
-            .join(".grok")
+            .join(".igrok")
     })
 }
 
-/// Returns `~/.grok/worktrees/<repo_slug>` for the given git root.
+/// Returns `~/.igrok/worktrees/<repo_slug>` for the given git root.
 ///
 /// Uses [`repo_slug`] to derive a collision-resistant directory name from
 /// the last two meaningful path components.
@@ -795,10 +795,10 @@ pub fn worktree_base_dir(git_root: &Path) -> std::path::PathBuf {
     grok_home().join("worktrees").join(slug)
 }
 
-/// Resolves the worktree base directory (`~/.grok/worktrees/<repo_name>`)
+/// Resolves the worktree base directory (`~/.igrok/worktrees/<repo_name>`)
 /// for a given source path, correctly handling grok-managed worktrees.
 ///
-/// When `source_path` is already under `~/.grok/worktrees/<repo>/...`, the
+/// When `source_path` is already under `~/.igrok/worktrees/<repo>/...`, the
 /// repo name is derived from the directory structure directly. This avoids
 /// `find_main_repo_root_from_path`, which misidentifies standalone worktrees
 /// as the main repo root (returning the worktree itself instead of the
@@ -848,7 +848,7 @@ pub fn label_from_path(worktree_path: &str) -> String {
         .unwrap_or_default()
 }
 
-/// Walk up from `cwd` (staying within `~/.grok/worktrees/`) to its registered
+/// Walk up from `cwd` (staying within `~/.igrok/worktrees/`) to its registered
 /// worktree record.
 ///
 /// Shared resolver for [`lookup_worktree_label`] and [`touch_worktree_for_cwd`];
@@ -882,7 +882,7 @@ fn worktree_record_for_cwd(cwd: &str) -> Option<(WorktreeDb, WorktreeRecord)> {
 /// The recorded source repo of the grok-managed worktree containing `cwd`, if any.
 ///
 /// Thin wrapper over [`worktree_record_for_cwd`] that drops the DB handle;
-/// returns `None` (without DB I/O) for paths outside `~/.grok/worktrees/`.
+/// returns `None` (without DB I/O) for paths outside `~/.igrok/worktrees/`.
 pub(crate) fn source_repo_for_cwd(cwd: &str) -> Option<std::path::PathBuf> {
     worktree_record_for_cwd(cwd).map(|(_db, rec)| rec.source_repo)
 }
@@ -1579,7 +1579,7 @@ impl From<CreateWorktreeFromWorktreeRequestWire> for CreateWorktreeFromWorktreeR
 
 /// Resolve the target worktree path for a fork operation.
 ///
-/// When the source path is already inside `~/.grok/worktrees/<repo>/`, the
+/// When the source path is already inside `~/.igrok/worktrees/<repo>/`, the
 /// repo name is derived from the directory structure rather than calling
 /// `find_main_repo_root_from_path` (which would return the standalone
 /// worktree root itself, causing nested paths).
@@ -2713,7 +2713,7 @@ pub fn candidate_worktree_cwds_for_same_repo(current_cwd: &std::path::Path) -> R
     ))
 }
 
-/// Scan `~/.grok/worktrees/<repo_name>/` for subdirectories not tracked
+/// Scan `~/.igrok/worktrees/<repo_name>/` for subdirectories not tracked
 /// in the DB. Returns a sorted list of absolute directory paths.
 fn scan_worktree_dirs_on_disk(main_repo_root: &std::path::Path) -> Vec<String> {
     let base = worktree_base_dir(main_repo_root);

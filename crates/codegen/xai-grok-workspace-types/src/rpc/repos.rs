@@ -1,5 +1,5 @@
 //! Provisioned-repo listing (`workspace.repos_list`) and the on-disk
-//! in-sandbox manifest contract (`{workspace}/.grok/repos.json`).
+//! in-sandbox manifest contract (`{workspace}/.igrok/repos.json`).
 //!
 //! The sandbox provisioner writes this manifest; the workspace list op
 //! reads it. Field names are the frontend/integration API — add optional
@@ -14,7 +14,7 @@ use super::{RpcActivityClass, WorkspaceRpc};
 /// Not relative to agent / workspace-server `--cwd` after a single-repo grove
 /// rewrite (`/workspace/app`). Writers and `workspace.repos_list` must join
 /// this to that sandbox root.
-pub const REPOS_MANIFEST_RELATIVE_PATH: &str = ".grok/repos.json";
+pub const REPOS_MANIFEST_RELATIVE_PATH: &str = ".igrok/repos.json";
 
 /// Current on-disk / wire manifest version.
 pub const REPOS_MANIFEST_VERSION: u32 = 1;
@@ -70,7 +70,7 @@ impl RepoManifest {
         }
     }
 
-    /// Parse bytes from `{workspace}/.grok/repos.json`.
+    /// Parse bytes from `{workspace}/.igrok/repos.json`.
     pub fn from_json_bytes(bytes: &[u8]) -> Result<Self, serde_json::Error> {
         serde_json::from_slice(bytes)
     }
@@ -90,7 +90,7 @@ impl RepoManifest {
                 continue;
             }
             let mount = std::path::PathBuf::from(raw);
-            // Confine to the workspace: a compromised/malicious `.grok/repos.json`
+            // Confine to the workspace: a compromised/malicious `.igrok/repos.json`
             // must not point prompt/graph/fs-notify walks at paths outside the
             // sandbox workspace. Reject `..` traversal and any mount that is not
             // under `workspace_root` (mirrors the confinement `unnamed_cwd` /

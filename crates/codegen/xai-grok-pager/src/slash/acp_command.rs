@@ -197,12 +197,12 @@ mod tests {
     fn valid_skill_meta_parses_identity() {
         let meta = serde_json::json!({
             "scope": "local",
-            "path": "/home/user/.grok/skills/commit/SKILL.md",
+            "path": "/home/user/.igrok/skills/commit/SKILL.md",
         });
         assert_eq!(
             parse(meta),
             SkillMeta::Skill(SkillIdentity {
-                path: "/home/user/.grok/skills/commit/SKILL.md".to_string(),
+                path: "/home/user/.igrok/skills/commit/SKILL.md".to_string(),
                 scope: SkillScope::Local,
                 plugin_name: None,
             })
@@ -231,7 +231,7 @@ mod tests {
     fn unknown_scope_string_is_foreign_not_malformed() {
         let meta = serde_json::json!({
             "scope": "workflow",
-            "path": ".grok/workflows/pr-cleanup.rhai",
+            "path": ".igrok/workflows/pr-cleanup.rhai",
         });
         assert_eq!(parse(meta), SkillMeta::Foreign);
     }
@@ -356,7 +356,7 @@ mod tests {
             "pr-cleanup",
             Some(serde_json::json!({
                 "scope": "workflow",
-                "path": ".grok/workflows/pr-cleanup.rhai",
+                "path": ".igrok/workflows/pr-cleanup.rhai",
             })),
         ));
         let mut ctx = make_exec_ctx();

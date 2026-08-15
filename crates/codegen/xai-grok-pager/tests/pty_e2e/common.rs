@@ -232,7 +232,7 @@ pub(crate) fn trust_env(feature_on: bool) -> [(&'static str, &'static str); 2] {
 pub(crate) fn folder_is_trusted(content: &ContentController, repo: &std::path::Path) -> bool {
     let store_path = content
         .home()
-        .join(".grok")
+        .join(".igrok")
         .join(xai_grok_workspace::trust::TRUST_FILE_NAME);
     let store = xai_grok_workspace::trust::TrustStore::load_from(store_path);
     store.is_trusted(&xai_grok_workspace::trust::workspace_key(repo))
@@ -268,7 +268,7 @@ pub(crate) fn seed_mcp_server_config(content: &ContentController) {
     #[cfg(windows)]
     let command = "cmd.exe";
 
-    let grok_home = content.home().join(".grok");
+    let grok_home = content.home().join(".igrok");
     std::fs::create_dir_all(&grok_home).expect("create fake GROK_HOME");
     let config = format!(
         "[mcp_servers.{MCP_TEST_SERVER}]\ncommand = \"{command}\"\nargs = []\nstartup_timeout_sec = 2\n"
@@ -403,20 +403,20 @@ pub(crate) const MOUSE_OFF_STICKY: &str =
 pub(crate) const MOUSE_OFF_HINT_PROMPT: &str =
     "/toggle-mouse-reporting to enable mouse reporting and restore TUI features";
 
-/// Seed `~/.grok/config.toml` with a `[ui]` section body (e.g.
-/// `"vim_mode = true"`). Same `{GROK_HOME|HOME}/.grok/config.toml` location
+/// Seed `~/.igrok/config.toml` with a `[ui]` section body (e.g.
+/// `"vim_mode = true"`). Same `{GROK_HOME|HOME}/.igrok/config.toml` location
 /// `seed_mouse_reporting_toggle_config` uses; call before spawning the pager.
 pub(crate) fn seed_ui_config(content: &ContentController, ui_body: &str) {
-    let grok_home = content.home().join(".grok");
-    std::fs::create_dir_all(&grok_home).expect("create .grok");
+    let grok_home = content.home().join(".igrok");
+    std::fs::create_dir_all(&grok_home).expect("create .igrok");
     let config = format!("[ui]\n{ui_body}\n");
     std::fs::write(grok_home.join("config.toml"), config).expect("write config.toml");
 }
 
 pub(crate) fn seed_mouse_reporting_toggle_config(content: &ContentController, enabled: bool) {
-    let grok_home = content.home().join(".grok");
-    std::fs::create_dir_all(&grok_home).expect("create .grok");
-    // Minimal opt-in only — matches load_config's `{GROK_HOME|HOME}/.grok/config.toml`.
+    let grok_home = content.home().join(".igrok");
+    std::fs::create_dir_all(&grok_home).expect("create .igrok");
+    // Minimal opt-in only — matches load_config's `{GROK_HOME|HOME}/.igrok/config.toml`.
     let config = if enabled {
         "[ui]\nmouse_reporting_toggle = true\n"
     } else {
@@ -428,8 +428,8 @@ pub(crate) fn seed_mouse_reporting_toggle_config(content: &ContentController, en
 
 /// Seed `[ui] keep_text_selection = "hold"` under the content controller's home.
 pub(crate) fn seed_keep_text_selection_config(content: &ContentController) {
-    let grok_home = content.home().join(".grok");
-    std::fs::create_dir_all(&grok_home).expect("create .grok");
+    let grok_home = content.home().join(".igrok");
+    std::fs::create_dir_all(&grok_home).expect("create .igrok");
     std::fs::write(
         grok_home.join("config.toml"),
         "[ui]\nkeep_text_selection = \"hold\"\n",
@@ -956,7 +956,7 @@ pub(crate) fn plan_lines_duplicated(
 /// keeps the session's `plan.md`. Polls: the first turn creates it
 /// asynchronously.
 pub(crate) fn session_dir(content: &ContentController, harness: &mut PtyHarness) -> PathBuf {
-    let sessions = content.home().join(".grok").join("sessions");
+    let sessions = content.home().join(".igrok").join("sessions");
     for _ in 0..100 {
         if let Ok(outer) = std::fs::read_dir(&sessions) {
             for cwd_dir in outer.flatten() {

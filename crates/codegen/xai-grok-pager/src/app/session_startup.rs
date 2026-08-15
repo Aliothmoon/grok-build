@@ -622,7 +622,7 @@ fn local_workspace_ack_path() -> Option<std::path::PathBuf> {
         .or_else(|| {
             dirs::home_dir()
                 .or_else(|| std::env::var_os("HOME").map(Into::into))
-                .map(|h| h.join(".grok"))
+                .map(|h| h.join(".igrok"))
         })?;
     Some(home.join("local_workspace_ack"))
 }

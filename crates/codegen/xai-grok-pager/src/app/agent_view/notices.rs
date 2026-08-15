@@ -280,7 +280,7 @@ impl AgentView {
     ///
     /// When every trusted clipboard backend fails (common on Apple Terminal
     /// over SSH), the toast points at the backup file
-    /// (`~/.grok/last-copy.txt`, or `GROK_COPY_FILE`) instead. The returned
+    /// (`~/.igrok/last-copy.txt`, or `GROK_COPY_FILE`) instead. The returned
     /// [`CopyDelivery`](crate::clipboard::CopyDelivery) tells callers where
     /// the copy actually landed (clipboard, backup file, or nowhere).
     pub fn copy_to_clipboard(&mut self, text: &str) -> crate::clipboard::CopyDelivery {

@@ -14,22 +14,26 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
-    name: Build xai-grok-pager (release, linux-amd64)
-    runs-on: ubuntu-latest
-    timeout-minutes: 180
+    name: Build xai-grok-pager (release, windows-amd64)
+    runs-on: windows-latest
+    timeout-minutes: 240
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # bin/protoc is a DotSlash wrapper (not usable on CI runners);
-      # build.rs falls back to protoc from PATH / $PROTOC.
+      # bin/protoc is a DotSlash wrapper (not a Win32 exe); build.rs falls
+      # back to a protoc on PATH / $PROTOC. Chocolatey's protobuf puts
+      # protoc.exe on PATH.
       - name: Install protoc
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends protobuf-compiler
+          choco install -y protobuf
           protoc --version
 
       # Installs the toolchain pinned by rust-toolchain.toml
@@ -45,20 +49,22 @@ jobs:
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: grok-build
+          prefix-key: grok-build-win
           # Save caches from branch pushes only (PRs still restore).
           save-if: ${{ github.event_name == 'push' }}
+          # Windows artifacts are large; keep the repo cache budget sane.
+          cache-all-crates: false
 
       - name: Build
         run: cargo build -p xai-grok-pager-bin --release
 
       - name: Smoke test --version
-        run: ./target/release/xai-grok-pager --version
+        run: ./target/release/xai-grok-pager.exe --version
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: xai-grok-pager-linux-amd64
-          path: target/release/xai-grok-pager
+          name: xai-grok-pager-windows-amd64
+          path: target/release/xai-grok-pager.exe
           compression-level: 0
           if-no-files-found: error

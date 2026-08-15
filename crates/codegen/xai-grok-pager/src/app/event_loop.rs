@@ -1116,6 +1116,10 @@ pub(crate) async fn run(
         );
     }
     // else: auth_state defaults to Done (already authenticated eagerly)
+    // [LOCAL-DEV] No auto-login popup on startup: land on the welcome
+    // screen's login menu instead of immediately dispatching the login
+    // flow. The user starts it explicitly (l / Enter on the welcome menu,
+    // or /login).
     // Effects stashed until after the initial render, so the user sees the
     // welcome/auth UI right away.
     let mut post_render_effects = if needs_interactive_login {
@@ -1128,7 +1132,8 @@ pub(crate) async fn run(
             };
             vec![]
         } else {
-            dispatch::dispatch(Action::Login, &mut app)
+            app.auth_state = super::app_view::AuthState::Pending { error: None };
+            vec![]
         }
     } else {
         vec![]

@@ -1,12 +1,5 @@
 use fastrace::prelude::*;
-use fastrace_opentelemetry::OpenTelemetryReporter;
-use opentelemetry::InstrumentationScope;
-use opentelemetry::KeyValue;
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_otlp::{ExporterBuildError, SpanExporter};
-use opentelemetry_sdk::Resource;
-use std::borrow::Cow;
-use std::iter;
+use opentelemetry_otlp::ExporterBuildError;
 
 // Fastrace initialization
 pub fn init_fastrace(
@@ -14,24 +7,9 @@ pub fn init_fastrace(
     name: String,
     resource_attributes: impl IntoIterator<Item = (String, String)>,
 ) -> Result<(), ExporterBuildError> {
-    let exporter = SpanExporter::builder()
-        .with_tonic()
-        .with_endpoint(endpoint)
-        .with_protocol(opentelemetry_otlp::Protocol::Grpc)
-        .with_timeout(opentelemetry_otlp::OTEL_EXPORTER_OTLP_TIMEOUT_DEFAULT)
-        .build()?;
-    let attributes = resource_attributes
-        .into_iter()
-        .chain(iter::once(("service.name".into(), name.clone())))
-        .map(|(k, v)| KeyValue::new(k, v));
-    let reporter = OpenTelemetryReporter::new(
-        exporter,
-        Cow::Owned(Resource::builder().with_attributes(attributes).build()),
-        InstrumentationScope::builder(name)
-            .with_version(env!("CARGO_PKG_VERSION"))
-            .build(),
-    );
-    fastrace::set_reporter(reporter, fastrace::collector::Config::default());
+    // [LOCAL-DEV] Telemetry removed: never register an OTLP reporter, so
+    // fastrace spans are never exported off-host (workspace daemon).
+    let _ = (endpoint, name, resource_attributes);
     Ok(())
 }
 

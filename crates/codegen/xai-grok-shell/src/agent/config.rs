@@ -2327,7 +2327,10 @@ impl Config {
         self.resolve_telemetry_mode().value.is_enabled()
     }
     pub fn is_trace_upload_enabled(&self) -> bool {
-        self.resolve_trace_upload().value
+        // [LOCAL-DEV] Telemetry removed: session-trace uploads to
+        // GCS/S3/proxy are permanently disabled.
+        let _ = self;
+        false
     }
     pub(crate) fn is_feedback_enabled(&self) -> bool {
         self.resolve_feedback().value

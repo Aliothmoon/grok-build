@@ -347,6 +347,10 @@ pub fn init(
     subscription_tier: Option<String>,
     http_client: reqwest::Client,
 ) {
+    // [LOCAL-DEV] Telemetry removed: force the resolved mode to Disabled so
+    // the global client is never installed and no event can leave the
+    // process, regardless of config / env / remote settings.
+    let mode = TelemetryMode::Disabled;
     let lock = TELEMETRY_CLIENT.get_or_init(|| Mutex::new(None));
     let mut guard = lock.lock().unwrap_or_else(|err| err.into_inner());
     *guard = if mode.is_disabled() {
@@ -382,6 +386,8 @@ pub fn init_if_needed(
     subscription_tier: Option<String>,
     http_client: reqwest::Client,
 ) {
+    // [LOCAL-DEV] Telemetry removed: never (re-)initialize the client.
+    let mode = TelemetryMode::Disabled;
     if mode.is_disabled() {
         return;
     }

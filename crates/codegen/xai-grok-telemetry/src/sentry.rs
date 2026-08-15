@@ -32,6 +32,11 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 pub fn init(config: Config) -> ClientInitGuard {
     let config = CONFIG.get_or_init(|| config);
 
+    // [LOCAL-DEV] Telemetry removed: always return the no-op Sentry client,
+    // regardless of SENTRY_DSN (env or build-time).
+    let _ = config;
+    return sentry::init(ClientOptions::default());
+
     if config.disabled {
         return sentry::init(ClientOptions::default());
     }

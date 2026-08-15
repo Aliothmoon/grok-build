@@ -1343,7 +1343,7 @@ fn resolve_credentials_multi_env_key_uses_lc_alias() {
 }
 #[test]
 #[serial]
-fn resolve_credentials_empty_env_key_falls_through_to_session() {
+fn resolve_credentials_empty_env_key_fails_closed_instead_of_session() {
     use xai_chat_state::AuthType;
     use xai_grok_test_support::EnvGuard;
     let primary = "GROK_TEST_EMPTY_ENV_PRIMARY";
@@ -1354,12 +1354,12 @@ fn resolve_credentials_empty_env_key_falls_through_to_session() {
     model.env_key = Some(EnvKeys::new([primary, alias]));
     assert!(!model.has_own_credentials());
     let creds = resolve_credentials(&model, Some("session-jwt"));
-    assert_eq!(creds.auth_type, AuthType::SessionToken);
-    assert_eq!(creds.api_key.as_deref(), Some("session-jwt"));
+    assert_eq!(creds.auth_type, AuthType::ApiKey);
+    assert_eq!(creds.api_key, None, "declared env_key that resolves to nothing must not silently fall back to the session token");
 }
 #[test]
 #[serial]
-fn resolve_credentials_empty_env_key_falls_through_to_global_key() {
+fn resolve_credentials_empty_env_key_fails_closed_instead_of_global_key() {
     use crate::agent::auth_method::{LEGACY_XAI_API_KEY_ENV_VAR, XAI_API_KEY_ENV_VAR};
     use xai_chat_state::AuthType;
     use xai_grok_test_support::EnvGuard;
@@ -1375,16 +1375,15 @@ fn resolve_credentials_empty_env_key_falls_through_to_global_key() {
     assert!(!model.has_own_credentials());
     let creds = resolve_credentials(&model, None);
     assert_eq!(creds.auth_type, AuthType::ApiKey);
-    assert_eq!(creds.api_key.as_deref(), Some(sentinel));
+    assert_eq!(creds.api_key, None, "XAI_API_KEY must not ride on a third-party model");
 }
 #[test]
-fn resolve_credentials_empty_api_key_falls_through_to_session() {
+fn resolve_credentials_third_party_model_never_uses_session_token() {
     use xai_chat_state::AuthType;
-    let model = test_model_entry("m", "https://inference.example/v1", Some(""), None, None);
-    assert!(!model.has_own_credentials());
+    let model = test_model_entry("m", "https://inference.example/v1", None, None, None);
     let creds = resolve_credentials(&model, Some("session-jwt"));
-    assert_eq!(creds.auth_type, AuthType::SessionToken);
-    assert_eq!(creds.api_key.as_deref(), Some("session-jwt"));
+    assert_eq!(creds.auth_type, AuthType::ApiKey);
+    assert_eq!(creds.api_key, None, "a third-party base_url must not inherit the session token");
 }
 #[test]
 #[serial]
@@ -1410,8 +1409,14 @@ fn config_toml_env_key_array_parses() {
 #[test]
 fn resolve_credentials_sets_auth_type() {
     use xai_chat_state::AuthType;
-    let model = test_model_entry("m", "https://example.com/v1", None, None, None);
-    let creds = resolve_credentials(&model, Some("tok"));
+    let first_party = test_model_entry(
+        "m",
+        &crate::agent::config::EndpointsConfig::default().resolve_inference_base_url(),
+        None,
+        None,
+        None,
+    );
+    let creds = resolve_credentials(&first_party, Some("tok"));
     assert_eq!(creds.auth_type, AuthType::SessionToken);
     let byok = test_model_entry("m", "https://example.com/v1", Some("key"), None, None);
     let creds = resolve_credentials(&byok, Some("tok"));

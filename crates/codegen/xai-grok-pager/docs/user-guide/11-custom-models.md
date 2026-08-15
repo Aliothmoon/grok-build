@@ -97,8 +97,10 @@ Grok resolves the API key in this order:
 
 1. The `api_key` field in the model config
 2. The environment variable(s) named by `env_key` — a single string or an array of names. The first set, non-empty value wins (for example `env_key = ["ANTHROPIC_AUTH_TOKEN", "LC_ANTHROPIC_AUTH_TOKEN"]` for SSH `LC_*` forwarding)
-3. Your signed-in session token (from `grok login`), for a model with no `api_key`/`env_key` of its own
-4. The `XAI_API_KEY` environment variable (global fallback; Grok also accepts `GROK_CODE_XAI_API_KEY` for backward compatibility)
+3. Your signed-in session token (from `grok login`), **only when the model targets a first-party xAI endpoint** and declares no `env_key` of its own
+4. The `XAI_API_KEY` environment variable (global fallback; same first-party restriction)
+
+Credential independence is fail-closed: a model whose `base_url` points at a third-party host never inherits the grok session token or `XAI_API_KEY`, and a model that declares `env_key` names that are all unset sends **no** credential (you get a clear 401) instead of silently falling back to the grok key.
 
 ### Context Window
 

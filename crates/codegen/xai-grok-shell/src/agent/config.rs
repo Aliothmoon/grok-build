@@ -4818,6 +4818,28 @@ pub(crate) fn resolve_credentials(
     session_key: Option<&str>,
 ) -> ResolvedCredentials {
     let info = model.info();
+    // [LOCAL-DEV] Per-provider credential independence: the grok session
+    // token / XAI_API_KEY must never ride on a third-party endpoint or mask
+    // a broken per-model credential setup. Upstream already fail-closes
+    // models that declare `model_provider`; these two rules extend the same
+    // guarantee to plain `[model.<id>]` entries:
+    // (a) a base_url (or api_base_url) that is not a first-party host gets no
+    //     session / XAI_API_KEY fallback;
+    // (b) a model that declares env_key names that resolve to nothing fails
+    //     with no credential (visible 401) instead of silently using the
+    //     session token.
+    let session_bearer_unsafe = !crate::util::is_xai_api_url(&info.base_url)
+        || model
+            .api_base_url
+            .as_deref()
+            .is_some_and(|url| !crate::util::is_xai_api_url(url));
+    let declared_env_unresolved = model
+        .env_key
+        .as_ref()
+        .is_some_and(|keys| !keys.is_empty())
+        && model.own_credential().is_none()
+        && model.auth_provider.is_none();
+    let allow_session_fallback = !session_bearer_unsafe && !declared_env_unresolved;
     let (api_key, base_url, auth_type) = if let Some(key) = model.own_credential() {
         (
             Some(key),
@@ -4831,13 +4853,15 @@ pub(crate) fn resolve_credentials(
             info.base_url.clone(),
             xai_chat_state::AuthType::ApiKey,
         )
-    } else if let Some(key) = session_key {
+    } else if allow_session_fallback && let Some(key) = session_key {
         (
             Some(key.to_owned()),
             info.base_url.clone(),
             xai_chat_state::AuthType::SessionToken,
         )
-    } else if let Ok(key) = crate::agent::auth_method::read_xai_api_key_env() {
+    } else if allow_session_fallback
+        && let Ok(key) = crate::agent::auth_method::read_xai_api_key_env()
+    {
         let url = model
             .api_base_url
             .clone()
@@ -4852,6 +4876,14 @@ pub(crate) fn resolve_credentials(
                 env_key = %env_keys,
                 "model has env_key configured but none of the environment variables are set — \
                  requests will have no API key",
+            );
+        }
+        if session_bearer_unsafe {
+            tracing::warn!(
+                model = %info.model,
+                base_url = %info.base_url,
+                "third-party model has no credential of its own; refusing to attach the grok \
+                 session token / XAI_API_KEY",
             );
         }
         (

@@ -1,5 +1,6 @@
 use fastrace::prelude::*;
 use opentelemetry_otlp::ExporterBuildError;
+use std::borrow::Cow;
 
 // Fastrace initialization
 pub fn init_fastrace(

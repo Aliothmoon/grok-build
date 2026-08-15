@@ -70,7 +70,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: xai-grok-pager-windows-amd64
-          path: target/x86_64-pc-windows-gnu/release/xai-grok-pager.exe
+          name: igrok-windows-amd64
+          path: target/x86_64-pc-windows-gnu/release/igrok.exe
           compression-level: 0
           if-no-files-found: error

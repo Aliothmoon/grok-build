@@ -32,15 +32,16 @@ jobs:
       # build.rs falls back to a protoc on PATH / $PROTOC. Download the same
       # protoc version the repo pins (bin/protoc -> v29.3) for Windows.
       - name: Install protoc
+        shell: pwsh
         run: |
-          set -euxo pipefail
-          curl -fsSL -o "$RUNNER_TEMP/protoc.zip" \
-            https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protoc-29.3-win64.zip
-          mkdir -p "$RUNNER_TEMP/protoc"
-          tar -xf "$RUNNER_TEMP/protoc.zip" -C "$RUNNER_TEMP/protoc"
-          echo "$RUNNER_TEMP/protoc/bin" >> "$GITHUB_PATH"
-          echo "PROTOC=$RUNNER_TEMP/protoc/bin/protoc.exe" >> "$GITHUB_ENV"
-          "$RUNNER_TEMP/protoc/bin/protoc.exe" --version
+          $ErrorActionPreference = 'Stop'
+          $zip = "$env:RUNNER_TEMP\protoc.zip"
+          Invoke-WebRequest -Uri 'https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protoc-29.3-win64.zip' -OutFile $zip
+          $dir = "$env:RUNNER_TEMP\protoc"
+          Expand-Archive -Path $zip -DestinationPath $dir
+          Add-Content $env:GITHUB_PATH "$dir\bin"
+          Add-Content $env:GITHUB_ENV "PROTOC=$dir\bin\protoc.exe"
+          & "$dir\bin\protoc.exe" --version
 
       # Installs the toolchain pinned by rust-toolchain.toml
       # (rustup auto-installs on override resolution).

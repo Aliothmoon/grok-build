@@ -14,64 +14,63 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
   build:
-    name: Build xai-grok-pager (release, windows-amd64)
-    runs-on: windows-latest
+    name: Cross-compile xai-grok-pager (windows-amd64, from macOS)
+    runs-on: macos-latest
     timeout-minutes: 240
+
+    env:
+      CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
+      CC_x86_64_pc_windows_gnu: x86_64-w64-mingw32-gcc
+      CXX_x86_64_pc_windows_gnu: x86_64-w64-mingw32-g++
+      AR_x86_64_pc_windows_gnu: x86_64-w64-mingw32-ar
+      RANLIB_x86_64_pc_windows_gnu: x86_64-w64-mingw32-ranlib
+      CMAKE_GENERATOR: Unix Makefiles
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # bin/protoc is a DotSlash wrapper with no win32 platform entry;
-      # build.rs falls back to a protoc on PATH / $PROTOC. Download the same
-      # protoc version the repo pins (bin/protoc -> v29.3) for Windows.
-      - name: Install protoc
-        shell: pwsh
+      # mingw-w64 cross toolchain for C deps (aws-lc-sys, libgit2, ...)
+      - name: Install cross toolchain
         run: |
-          $ErrorActionPreference = 'Stop'
-          $zip = "$env:RUNNER_TEMP\protoc.zip"
-          Invoke-WebRequest -Uri 'https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protoc-29.3-win64.zip' -OutFile $zip
-          $dir = "$env:RUNNER_TEMP\protoc"
-          Expand-Archive -Path $zip -DestinationPath $dir
-          Add-Content $env:GITHUB_PATH "$dir\bin"
-          Add-Content $env:GITHUB_ENV "PROTOC=$dir\bin\protoc.exe"
-          & "$dir\bin\protoc.exe" --version
+          brew install mingw-w64 nasm cmake
+          x86_64-w64-mingw32-gcc --version | head -1
 
-      # Installs the toolchain pinned by rust-toolchain.toml
-      # (rustup auto-installs on override resolution).
+      # protoc runs on the host (codegen only, not linked into the target).
+      - name: Install protoc
+        run: |
+          arch=$(uname -m | sed 's/arm64/aarch_64/')
+          curl -fsSL -o /tmp/protoc.zip \
+            "https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protoc-29.3-osx-${arch}.zip"
+          unzip -q /tmp/protoc.zip -d /tmp/protoc
+          echo "/tmp/protoc/bin" >> "$GITHUB_PATH"
+          echo "PROTOC=/tmp/protoc/bin/protoc" >> "$GITHUB_ENV"
+          /tmp/protoc/bin/protoc --version
+
+      # Installs the toolchain pinned by rust-toolchain.toml + the cross target.
       - name: Install Rust toolchain
-        run: rustup show active-toolchain
+        run: |
+          rustup show active-toolchain
+          rustup target add x86_64-pc-windows-gnu
 
-      # Caches:
-      #   - ~/.cargo/registry + ~/.cargo/git (crates.io + git deps)
-      #   - target/ (keyed on Cargo.lock + rust-toolchain.toml)
-      #   - the rustup toolchain itself
-      # Also sets CARGO_INCREMENTAL=0 to keep the target cache compact.
+      # Caches cargo registry/git deps, target/x86_64-pc-windows-gnu/, and the
+      # rustup toolchains. Sets CARGO_INCREMENTAL=0 automatically.
       - name: Cache cargo build
         uses: Swatinem/rust-cache@v2
         with:
-          prefix-key: grok-build-win
-          # Save caches from branch pushes only (PRs still restore).
+          prefix-key: grok-build-mingw
           save-if: ${{ github.event_name == 'push' }}
-          # Windows artifacts are large; keep the repo cache budget sane.
           cache-all-crates: false
 
       - name: Build
-        run: cargo build -p xai-grok-pager-bin --release
-
-      - name: Smoke test --version
-        run: ./target/release/xai-grok-pager.exe --version
+        run: cargo build --target x86_64-pc-windows-gnu -p xai-grok-pager-bin --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: xai-grok-pager-windows-amd64
-          path: target/release/xai-grok-pager.exe
+          path: target/x86_64-pc-windows-gnu/release/xai-grok-pager.exe
           compression-level: 0
           if-no-files-found: error

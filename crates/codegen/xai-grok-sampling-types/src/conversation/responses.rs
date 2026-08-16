@@ -118,7 +118,7 @@ impl From<&ConversationRequest> for rs::CreateResponse {
                     rs::ResponseFormatJsonSchema {
                         description: None,
                         name: STRUCTURED_OUTPUT_SCHEMA_NAME.to_string(),
-                        schema: Some(schema.clone()),
+                        schema: schema.clone(),
                         strict: Some(true),
                     },
                 ),
@@ -205,6 +205,7 @@ fn conversation_item_to_input_items(item: &ConversationItem) -> Vec<rs::InputIte
                 r#type: rs::MessageType::Message,
                 role: rs::Role::System,
                 content: rs::EasyInputContent::Text(s.content.as_ref().to_owned()),
+                phase: None,
             })]
         }
         ConversationItem::User(u) => {
@@ -213,6 +214,7 @@ fn conversation_item_to_input_items(item: &ConversationItem) -> Vec<rs::InputIte
                 r#type: rs::MessageType::Message,
                 role: rs::Role::User,
                 content,
+                phase: None,
             })]
         }
         ConversationItem::Reasoning(r) => {
@@ -229,6 +231,7 @@ fn conversation_item_to_input_items(item: &ConversationItem) -> Vec<rs::InputIte
                     r#type: rs::MessageType::Message,
                     role: rs::Role::Assistant,
                     content: rs::EasyInputContent::Text(a.content.as_ref().to_owned()),
+                    phase: None,
                 }));
             }
 
@@ -240,6 +243,7 @@ fn conversation_item_to_input_items(item: &ConversationItem) -> Vec<rs::InputIte
                         name: tc.name.clone(),
                         arguments: arguments.as_ref().to_owned(),
                         id: None,
+                        namespace: None,
                         status: None,
                     },
                 )));
@@ -339,6 +343,7 @@ fn build_responses_tools(req: &ConversationRequest) -> Vec<rs::Tool> {
                 description: t.description.clone(),
                 parameters: Some(t.parameters.clone()),
                 strict: None,
+                defer_loading: None,
             })
         })
         .collect();

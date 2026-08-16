@@ -220,6 +220,7 @@ fn test_responses_api_response_to_conversation_item() {
             id: "msg_123".to_string(),
             role: rs::AssistantRole::Assistant,
             status: rs::OutputStatus::Completed,
+            phase: None,
         })],
         parallel_tool_calls: None,
         previous_response_id: None,
@@ -276,6 +277,7 @@ fn test_responses_api_response_to_conversation_item() {
             name: "read_file".to_string(),
             id: None,
             status: None,
+            namespace: None,
         })],
         parallel_tool_calls: None,
         previous_response_id: None,
@@ -500,7 +502,7 @@ fn test_responses_api_with_reasoning() {
         object: "response".to_string(),
         output: vec![
             rs::OutputItem::Reasoning(rs::ReasoningItem {
-                id: "reasoning_1".to_string(),
+                id: Some("reasoning_1".to_string()),
                 summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
                     text: "I need to analyze this carefully.".to_string(),
                 })],
@@ -519,7 +521,8 @@ fn test_responses_api_with_reasoning() {
                 id: "msg_123".to_string(),
                 role: rs::AssistantRole::Assistant,
                 status: rs::OutputStatus::Completed,
-            }),
+            phase: None,
+        }),
         ],
         parallel_tool_calls: None,
         previous_response_id: None,
@@ -573,7 +576,7 @@ fn test_responses_api_with_encrypted_reasoning() {
         object: "response".to_string(),
         output: vec![
             rs::OutputItem::Reasoning(rs::ReasoningItem {
-                id: "reasoning_enc".to_string(),
+                id: Some("reasoning_enc".to_string()),
                 summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
                     text: "Visible thinking summary".to_string(),
                 })],
@@ -592,7 +595,8 @@ fn test_responses_api_with_encrypted_reasoning() {
                 id: "msg_456".to_string(),
                 role: rs::AssistantRole::Assistant,
                 status: rs::OutputStatus::Completed,
-            }),
+            phase: None,
+        }),
         ],
         parallel_tool_calls: None,
         previous_response_id: None,
@@ -663,7 +667,7 @@ fn test_responses_api_with_only_encrypted_reasoning() {
         object: "response".to_string(),
         output: vec![
             rs::OutputItem::Reasoning(rs::ReasoningItem {
-                id: "reasoning_only_enc".to_string(),
+                id: Some("reasoning_only_enc".to_string()),
                 summary: vec![], // Empty summary
                 content: None,
                 encrypted_content: Some("enc_only_encrypted_no_visible_summary".to_string()),
@@ -680,7 +684,8 @@ fn test_responses_api_with_only_encrypted_reasoning() {
                 id: "msg_789".to_string(),
                 role: rs::AssistantRole::Assistant,
                 status: rs::OutputStatus::Completed,
-            }),
+            phase: None,
+        }),
         ],
         parallel_tool_calls: None,
         previous_response_id: None,
@@ -723,7 +728,7 @@ fn test_conversation_item_with_sibling_reasoning_serialization() {
     // Reasoning is now a sibling variant — round-trip both items
     // through serde and confirm they survive.
     let reasoning_item = ConversationItem::Reasoning(rs::ReasoningItem {
-        id: "reasoning_1".to_string(),
+        id: Some("reasoning_1".to_string()),
         summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
             text: "Computing the answer...".to_string(),
         })],
@@ -755,7 +760,7 @@ fn test_encrypted_reasoning_included_in_responses_api_request() {
         ConversationItem::user("What is 2+2?"),
         // Previous reasoning + assistant: reasoning is now a sibling.
         ConversationItem::Reasoning(rs::ReasoningItem {
-            id: "r1".to_string(),
+            id: Some("r1".to_string()),
             summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
                 text: "Let me calculate 2+2...".to_string(),
             })],
@@ -817,7 +822,7 @@ fn test_only_encrypted_reasoning_included_in_request() {
     let req = ConversationRequest::from_items(vec![
         ConversationItem::user("Hello"),
         ConversationItem::Reasoning(rs::ReasoningItem {
-            id: String::new(),
+            id: None,
             summary: vec![],
             content: None,
             encrypted_content: Some("enc_hidden_thoughts".to_string()),
@@ -1088,7 +1093,7 @@ fn test_transform_cwd_rewrites_reasoning_sibling() {
 
     let mut items = vec![
         ConversationItem::Reasoning(rs::ReasoningItem {
-            id: "rs_1".to_string(),
+            id: Some("rs_1".to_string()),
             summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
                 text: format!("thinking about {worktree}"),
             })],
@@ -1238,6 +1243,7 @@ fn responses_api_conversion_preserves_model_fingerprint() {
             id: "msg_test".into(),
             role: rs::AssistantRole::Assistant,
             status: rs::OutputStatus::Completed,
+            phase: None,
         })],
         parallel_tool_calls: None,
         previous_response_id: None,
@@ -1277,7 +1283,7 @@ fn empty_reason_reasoning_only() {
     let response = ConversationResponse {
         items: vec![
             ConversationItem::Reasoning(rs::ReasoningItem {
-                id: "r1".to_string(),
+                id: Some("r1".to_string()),
                 summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
                     text: "thinking but no text output".to_string(),
                 })],
@@ -1320,7 +1326,7 @@ fn build_responses_input_preserves_multi_turn_ordering() {
     // which would shift the cache prefix every turn.
     fn r(text: &str) -> ConversationItem {
         ConversationItem::Reasoning(rs::ReasoningItem {
-            id: text.to_string(),
+            id: Some(text.to_string()),
             summary: vec![rs::SummaryPart::SummaryText(rs::SummaryTextContent {
                 text: text.to_string(),
             })],
@@ -1391,7 +1397,7 @@ fn upgrade_legacy_reasoning_singular_chat_completions_text_only() {
     let ConversationItem::Reasoning(r) = &siblings[0] else {
         panic!("expected Reasoning sibling");
     };
-    assert_eq!(r.id, "");
+    assert_eq!(r.id.as_deref(), Some(""));
     assert!(r.encrypted_content.is_none());
     let rs::SummaryPart::SummaryText(s) = &r.summary[0];
     assert_eq!(s.text, "step-by-step plain reasoning");
@@ -1621,20 +1627,20 @@ fn backend_tool_call_position_stable() {
         kind: BackendToolKind::WebSearch(rs::WebSearchToolCall {
             id: "ws_a".to_string(),
             status: rs::WebSearchToolCallStatus::Completed,
-            action: rs::WebSearchToolCallAction::Search(rs::WebSearchActionSearch {
+            action: Some(rs::WebSearchToolCallAction::Search(rs::WebSearchActionSearch {
                 query: "alpha".to_string(),
                 sources: Some(vec![]),
-            }),
+            })),
         }),
     });
     let ws_b = ConversationItem::BackendToolCall(BackendToolCallItem {
         kind: BackendToolKind::WebSearch(rs::WebSearchToolCall {
             id: "ws_b".to_string(),
             status: rs::WebSearchToolCallStatus::Completed,
-            action: rs::WebSearchToolCallAction::Search(rs::WebSearchActionSearch {
+            action: Some(rs::WebSearchToolCallAction::Search(rs::WebSearchActionSearch {
                 query: "beta".to_string(),
                 sources: Some(vec![]),
-            }),
+            })),
         }),
     });
 

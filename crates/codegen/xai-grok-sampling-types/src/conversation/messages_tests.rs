@@ -506,6 +506,6 @@ fn upgrade_legacy_reasoning_singular_anthropic_no_id() {
     let ConversationItem::Reasoning(r) = &siblings[0] else {
         panic!("expected Reasoning sibling");
     };
-    assert_eq!(r.id, "");
+    assert_eq!(r.id.as_deref(), Some(""));
     assert_eq!(r.encrypted_content.as_deref(), Some("signature-bytes-here"));
 }

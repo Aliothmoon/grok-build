@@ -3192,26 +3192,26 @@ fn e2e_credential_priority_model_key_beats_session_beats_env() {
         None,
         Some("https://api.x.ai/v1"),
     );
+    // [LOCAL-DEV] per-provider credential independence: a third-party
+    // base_url never inherits the session token or XAI_API_KEY — its
+    // credentials must come from the model entry itself.
     let sampling = resolve_sampling(&model_no_key, Some("session-key"));
     assert_eq!(
         sampling.api_key.as_deref(),
-        Some("session-key"),
-        "session token should beat env key when model has no own credentials"
+        None,
+        "third-party base_url must not inherit the session token"
     );
     assert_eq!(
         sampling.base_url, "https://proxy.api/v1",
-        "session auth should use base_url, not api_base_url"
+        "no-credential resolution still uses the model's base_url"
     );
     let sampling = resolve_sampling(&model_no_key, None);
     assert_eq!(
         sampling.api_key.as_deref(),
-        Some("env-key"),
-        "env key should be used when no session and no model credentials"
+        None,
+        "third-party base_url must not inherit XAI_API_KEY either"
     );
-    assert_eq!(
-        sampling.base_url, "https://api.x.ai/v1",
-        "env key should route to api_base_url"
-    );
+    assert_eq!(sampling.base_url, "https://proxy.api/v1");
     unsafe { std::env::remove_var("XAI_API_KEY") };
     let sampling = resolve_sampling(&model_no_key, None);
     assert!(

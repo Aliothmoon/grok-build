@@ -442,6 +442,7 @@ fn harness_pair(id: &str) -> Vec<xai_grok_sampling_types::conversation::Conversa
 /// per-session counter, and is persisted via exactly one `SetNextTraceTurn`.
 /// This is what makes each sibling `turn_{N}` reachable — without the
 /// advance every harness turn would clobber the same GCS path.
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test(flavor = "current_thread")]
 async fn upload_harness_trace_turns_numbers_siblings_and_persists_counter() {
     let agent = build_minimal_agent_for_tests();
@@ -560,6 +561,7 @@ async fn upload_harness_trace_turns_uploads_disabled_does_not_burn_counter() {
 /// artifacts; (2) recording the turn's metadata + turn_messages yields a
 /// manifest listing exactly those two; (3) `fully_uploaded` is true iff
 /// neither failed.
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test(flavor = "current_thread")]
 async fn upload_harness_trace_turns_build_per_turn_manifest() {
     use crate::upload::manifest::{
@@ -3205,6 +3207,7 @@ async fn spawn_counting_storage_stub() -> (String, std::sync::Arc<std::sync::ato
 /// Regression: the auth-diagnostics uploader was gated only on the
 /// trace-upload config switch; it must also honor ZDR / retention
 /// opt-out, checked at invocation time.
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test]
 async fn diagnostic_upload_skipped_for_opted_out_user() {
     let (stub_url, count) = spawn_counting_storage_stub().await;
@@ -3224,6 +3227,7 @@ async fn diagnostic_upload_skipped_for_opted_out_user() {
         "no diagnostics request may leave the machine after opt-out"
     );
 }
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test]
 async fn diagnostic_upload_sent_for_normal_user() {
     let (stub_url, count) = spawn_counting_storage_stub().await;
@@ -3243,6 +3247,7 @@ async fn diagnostic_upload_sent_for_normal_user() {
 /// The diagnostics privacy gate fails closed: with no credential in the
 /// `AuthManager` (e.g. a mid-session `/logout` raced the refresh failure
 /// that triggers the upload), nothing may leave the machine.
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test]
 async fn diagnostic_upload_skipped_without_credentials() {
     let (stub_url, count) = spawn_counting_storage_stub().await;
@@ -3262,6 +3267,7 @@ async fn diagnostic_upload_skipped_without_credentials() {
 /// The diagnostics uploader is wired once (at agent construction), so it
 /// must re-check the live trace-upload mirror at invocation time: a
 /// mid-session config-level kill switch stops diagnostics uploads too.
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test]
 async fn diagnostic_upload_skipped_after_mid_session_trace_upload_kill_switch() {
     let (stub_url, count) = spawn_counting_storage_stub().await;
@@ -3312,6 +3318,7 @@ async fn session_search_stops_on_a_mid_session_kill_switch() {
 /// trace-upload switch; `sync_collection_config_gate` must keep that mirror
 /// current so a mid-session remote-settings flip (kill switch) stops
 /// collection without a new session.
+#[ignore = "[LOCAL-DEV] trace/diagnostic upload permanently disabled (telemetry removed)"]
 #[tokio::test]
 async fn collection_config_gate_mirror_follows_trace_upload_flip() {
     let agent = build_agent_with_auth(crate::auth::GrokAuth::test_default());

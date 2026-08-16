@@ -199,7 +199,18 @@ pub(crate) fn resolve_model_catalog(
     cfg: &config::Config,
     prefetched: Option<IndexMap<String, ModelEntry>>,
 ) -> IndexMap<String, ModelEntry> {
-    let mut catalog: IndexMap<String, ModelEntry> = config::resolve_model_list(cfg, prefetched);
+    resolve_model_catalog_with_dev(cfg, prefetched, &IndexMap::new())
+}
+
+/// [`resolve_model_catalog`] with the models.dev community catalog as an
+/// additive source (see `config::resolve_model_list_with_dev`).
+pub(crate) fn resolve_model_catalog_with_dev(
+    cfg: &config::Config,
+    prefetched: Option<IndexMap<String, ModelEntry>>,
+    dev: &IndexMap<String, ModelEntry>,
+) -> IndexMap<String, ModelEntry> {
+    let mut catalog: IndexMap<String, ModelEntry> =
+        config::resolve_model_list_with_dev(cfg, prefetched, dev);
 
     if let Ok(Some(disabled)) = ModelGlobSet::compile(cfg.models.disabled_models.as_ref()) {
         let before = catalog.len();

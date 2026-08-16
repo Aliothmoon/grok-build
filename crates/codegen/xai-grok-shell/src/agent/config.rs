@@ -1021,6 +1021,10 @@ pub struct DiagnosticsConfig {
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ModelsConfig {
+    /// models.dev community catalog gate. `Some(false)` disables expanding
+    /// `provider/model` entries from the cached models.dev document.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dev_catalog: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<String>,
     /// The pre-campaign `models.default` (merged user/managed/requirements)
@@ -3528,6 +3532,18 @@ pub(crate) fn resolve_model_list(
     cfg: &Config,
     prefetched: Option<IndexMap<String, ModelEntry>>,
 ) -> IndexMap<String, ModelEntry> {
+    resolve_model_list_with_dev(cfg, prefetched, &IndexMap::new())
+}
+
+/// [`resolve_model_list`] with an extra additive source: community catalog
+/// entries (models.dev). Dev entries sit between the built-in/prefetched
+/// catalog and user `[model.*]` overrides — an existing entry with the same
+/// key wins, and user config can still override any dev entry.
+pub(crate) fn resolve_model_list_with_dev(
+    cfg: &Config,
+    prefetched: Option<IndexMap<String, ModelEntry>>,
+    dev: &IndexMap<String, ModelEntry>,
+) -> IndexMap<String, ModelEntry> {
     let mut resolved: IndexMap<String, ModelEntry> = IndexMap::new();
     if cfg.endpoints.has_custom_endpoint() {
         tracing::info!(
@@ -3571,6 +3587,11 @@ pub(crate) fn resolve_model_list(
             }
         }
         resolved = prefetched;
+    }
+    // [LOCAL-DEV] models.dev community catalog: additive, below built-in and
+    // prefetched entries, still overridable by user `[model.*]` config below.
+    for (key, entry) in dev {
+        resolved.entry(key.clone()).or_insert_with(|| entry.clone());
     }
     for (key, model_override) in &cfg.config_models {
         let had_base = resolved.contains_key(key);

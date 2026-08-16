@@ -143,6 +143,9 @@ struct Inner {
     /// Set once the user explicitly picks a model (`/model`); guards the
     /// first-catalog reselect from clobbering that choice.
     user_selected_model: AtomicBool,
+    /// models.dev community catalog entries (credential-gated, additive).
+    /// Loaded from disk cache at build, refreshed in the background.
+    dev_models: RwLock<IndexMap<String, ModelEntry>>,
 }
 
 /// Clears an in-flight flag on drop so a panicking task can't wedge future refreshes.
@@ -266,7 +269,16 @@ impl ModelsManagerBuilder {
         let has_session = self.auth_manager.current_or_expired().is_some();
         let fetch_auth = ModelFetchAuth::resolve(&self.cfg.endpoints, has_session);
         let current_reasoning_effort = self.cfg.models.default_reasoning_effort;
-        ModelsManager {
+        // [LOCAL-DEV] models.dev catalog: seed from the disk cache synchronously
+        // so the picker has entries immediately, then refresh in the background.
+        let dev_models = if dev_catalog::enabled(&self.cfg) {
+            dev_catalog::load_cached()
+        } else {
+            IndexMap::new()
+        };
+        let refresh_dev_catalog =
+            dev_catalog::enabled(&self.cfg) && dev_catalog::needs_refresh();
+        let manager = ModelsManager {
             inner: Arc::new(Inner {
                 catalog: RwLock::new(CatalogState {
                     prefetched: self.prefetched,
@@ -287,8 +299,13 @@ impl ModelsManagerBuilder {
                 model_switch_watch: tokio::sync::watch::channel(0u64).0,
                 catalog_progress: tokio::sync::watch::channel(CatalogProgress::Pending).0,
                 user_selected_model: AtomicBool::new(false),
+                dev_models: RwLock::new(dev_models),
             }),
+        };
+        if refresh_dev_catalog {
+            manager.spawn_dev_catalog_refresh();
         }
+        manager
     }
 }
 
@@ -669,7 +686,30 @@ impl ModelsManager {
     // ── Mutations ───────────────────────────────────────────────────
 
     fn rebuild(&self, cfg: &config::Config, prefetched: Option<IndexMap<String, ModelEntry>>) {
-        self.inner.catalog.write().models = resolve_model_catalog(cfg, prefetched);
+        let dev = self.inner.dev_models.read().clone();
+        self.inner.catalog.write().models =
+            resolution::resolve_model_catalog_with_dev(cfg, prefetched, &dev);
+    }
+
+    /// [LOCAL-DEV] Background refresh of the models.dev catalog. On success,
+    /// swap the cached entries and rebuild the catalog from current state.
+    fn spawn_dev_catalog_refresh(&self) {
+        let Ok(handle) = tokio::runtime::Handle::try_current() else {
+            return;
+        };
+        let inner = Arc::clone(&self.inner);
+        let manager = ModelsManager { inner };
+        handle.spawn(async move {
+            let fresh = dev_catalog::fetch_and_cache().await;
+            if fresh.is_empty() {
+                return; // keep the stale cache; likely offline
+            }
+            *manager.inner.dev_models.write() = fresh;
+            let cfg = manager.inner.cfg.read().clone();
+            let prefetched = manager.inner.catalog.read().prefetched.clone();
+            manager.rebuild(&cfg, prefetched);
+            tracing::info!("dev catalog: applied refreshed models.dev entries");
+        });
     }
 
     /// Reset to this identity's bundled catalog and reselect a valid default.
@@ -1340,6 +1380,7 @@ impl ModelsManager {
 }
 
 mod cache;
+mod dev_catalog;
 mod endpoint;
 mod fetch;
 mod resolution;

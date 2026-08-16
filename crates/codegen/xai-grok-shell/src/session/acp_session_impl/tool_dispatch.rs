@@ -444,10 +444,10 @@ mod tests {
         // The exact serialized `web_search_call` payload the sampler forwards on
         // `BackendToolCallCompleted` (via `serde_json::to_value(ws)`).
         serde_json::to_value(rs::WebSearchToolCall {
-            action: rs::WebSearchToolCallAction::Search(rs::WebSearchActionSearch {
+            action: Some(rs::WebSearchToolCallAction::Search(rs::WebSearchActionSearch {
                 query: "rust async runtime".to_string(),
                 sources: None,
-            }),
+            })),
             id: "ws1".to_string(),
             status,
         })

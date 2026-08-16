@@ -57,8 +57,14 @@ jobs:
           cache-all-crates: false
 
       # -static: fully self-contained exe (no libgcc/libwinpthread DLL deps)
+      # GROK_VERSION: compile-time version stamp (xai-grok-version reads it
+      # via option_env!) so the binary self-reports the release tag instead of
+      # the frozen Cargo.toml version — the self-updater compares against it.
       - name: Build
-        run: cargo build --target x86_64-pc-windows-gnu -p xai-grok-pager-bin --release
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          echo "Building igrok ${VER}"
+          GROK_VERSION="$VER" cargo build --target x86_64-pc-windows-gnu -p xai-grok-pager-bin --release
         env:
           RUSTFLAGS: -C link-arg=-static
 

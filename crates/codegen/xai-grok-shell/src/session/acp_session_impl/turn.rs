@@ -2364,6 +2364,16 @@ impl SessionActor {
             };
             auth_retry_schedule.reset_on_success();
             let model_elapsed_ms = model_timer.elapsed().as_millis() as u64;
+            // [LOCAL-DEV] Prefer the sampler's wire-to-wire timing over the
+            // outer wall-clock: `model_timer` starts before
+            // `run_turn_via_sampler` (whose `prepare_sampler_for_turn` may do
+            // an OAuth refresh + config push) and includes sampler-internal
+            // backoff, both of which diluted the TPS denominator.
+            let elapsed_ms = if latency.time_to_last_byte_ms > 0 {
+                latency.time_to_last_byte_ms
+            } else {
+                model_elapsed_ms
+            };
             let usage = response.usage.as_ref();
             let prompt_tokens = usage.map(|u| u.prompt_tokens);
             let cached_prompt_tokens = usage.map(|u| u.cached_prompt_tokens);
@@ -2373,8 +2383,8 @@ impl SessionActor {
             let tokens_per_sec = match completion_tokens {
                 Some(ct) if ct > 0 => {
                     let decode_ms = match ttft_ms {
-                        Some(ttft) if model_elapsed_ms > ttft => model_elapsed_ms - ttft,
-                        _ => model_elapsed_ms,
+                        Some(ttft) if elapsed_ms > ttft => elapsed_ms - ttft,
+                        _ => elapsed_ms,
                     };
                     (decode_ms > 0).then(|| {
                         let tps = f64::from(ct) * 1000.0 / decode_ms as f64;
@@ -2414,7 +2424,7 @@ impl SessionActor {
                 idle_ms,
                 ttft_ms,
                 tokens_per_sec,
-                elapsed_ms: model_elapsed_ms,
+                elapsed_ms,
                 prompt_tokens: prompt_tokens.map(u64::from),
                 completion_tokens: completion_tokens.map(u64::from),
                 cached_prompt_tokens: cached_prompt_tokens.map(u64::from),

@@ -286,9 +286,11 @@ pub(super) fn handle_session_notification_with_origin(
             if let Some(u) = usage.as_ref() {
                 agent.session.session_usage =
                     Some(crate::app::agent::SessionUsageTotals {
-                    // [LOCAL-DEV] fresh = uncached input + cache writes;
-                    // cache reads ride separately (pi-usage convention).
-                    fresh: u.totals.input_tokens + u.totals.cache_creation_tokens,
+                    // [LOCAL-DEV] `totals.input_tokens` accumulates the RAW
+                    // prompt_tokens — the FULL size including cache reads
+                    // ("do not subtract", per TokenUsage) — so fresh =
+                    // total − cached; no double counting.
+                    fresh: u.totals.input_tokens.saturating_sub(u.totals.cached_read_tokens),
                     output: u.totals.output_tokens,
                     cached_read: u.totals.cached_read_tokens,
                 });

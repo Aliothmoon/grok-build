@@ -76,7 +76,7 @@ fn manual_install_cmd(channel: &str) -> String {
 fn reinstall_hint(installer: &str, channel: &str) -> String {
     match installer {
         "npm" => "Please reinstall via npm:\n  npm i -g @xai-official/grok".to_string(),
-        "gh-release" => "Please reinstall via GitHub Releases:\n  gh release download --repo xai-org-shared/grok-build --pattern 'grok-*' --output grok && chmod +x grok".to_string(),
+        "gh-release" => "Please reinstall via GitHub Releases:\n  gh release download --repo Aliothmoon/grok-build --pattern 'igrok-*' --output igrok && chmod +x igrok".to_string(),
         _ => format!("Please reinstall via:\n  {}", manual_install_cmd(channel)),
     }
 }
@@ -511,7 +511,9 @@ pub async fn get_installer() -> Option<&'static str> {
     match cfg.cli.installer.as_deref() {
         Some("npm") => Some("npm"),
         Some("gh-release") => Some("gh-release"),
-        _ => Some("internal"),
+        // [LOCAL-DEV] The fork ships via its own GitHub Releases; gh-release
+        // is the default update channel instead of xAI's internal GCS.
+        _ => Some("gh-release"),
     }
 }
 
@@ -1725,7 +1727,7 @@ async fn swap_managed_bin_links(
     binary_path: &std::path::Path,
     bin_dir: &std::path::Path,
 ) -> Result<std::path::PathBuf> {
-    let grok_name = if cfg!(windows) { "grok.exe" } else { "grok" };
+    let grok_name = if cfg!(windows) { "igrok.exe" } else { "igrok" };
     let agent_name = if cfg!(windows) { "agent.exe" } else { "agent" };
     let grok_link = bin_dir.join(grok_name);
     let agent_link = bin_dir.join(agent_name);
@@ -2382,7 +2384,7 @@ async fn gh_release_download(tag: &str, pattern: &str, dest: &std::path::Path) -
     Ok(())
 }
 
-/// Download and install grok from GitHub Releases (xai-org-shared/grok-build).
+/// Download and install igrok from GitHub Releases (Aliothmoon/grok-build).
 ///
 /// Uses `gh release download` to fetch the binary matching the current platform.
 /// This works anywhere the `gh` CLI is authenticated, without needing npm or
@@ -2402,16 +2404,16 @@ async fn install_gh_release(target: Option<&str>) -> Result<()> {
     tokio::fs::create_dir_all(&download_dir).await?;
     tokio::fs::create_dir_all(&bin_dir).await?;
 
-    let binary_name = format!("grok-{}-{}", version, platform);
+    let binary_name = format!("igrok-{}-{}", version, platform);
     let binary_path = download_dir.join(&binary_name);
     let tag = format!("v{}", version);
 
     eprintln!(
-        "  Downloading grok v{} ({}) from GitHub Releases...",
+        "  Downloading igrok v{} ({}) from GitHub Releases...",
         version, platform
     );
 
-    gh_release_download(&tag, &binary_name, &binary_path).await?;
+    gh_release_download(&tag, &format!("{binary_name}*"), &binary_path).await?;
 
     // chmod +x
     #[cfg(unix)]

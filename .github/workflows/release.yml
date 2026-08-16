@@ -1,0 +1,83 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Release igrok (windows-amd64) from tag
+    runs-on: macos-latest
+    timeout-minutes: 240
+
+    env:
+      CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
+      CC_x86_64_pc_windows_gnu: x86_64-w64-mingw32-gcc
+      CXX_x86_64_pc_windows_gnu: x86_64-w64-mingw32-g++
+      AR_x86_64_pc_windows_gnu: x86_64-w64-mingw32-ar
+      RANLIB_x86_64_pc_windows_gnu: x86_64-w64-mingw32-ranlib
+      CMAKE_GENERATOR: Unix Makefiles
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install cross toolchain
+        run: |
+          brew install mingw-w64 nasm cmake
+          x86_64-w64-mingw32-gcc --version | head -1
+
+      - name: Install protoc
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = "$env:RUNNER_TEMP\protoc.zip"
+          Invoke-WebRequest -Uri 'https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protoc-29.3-osx-aarch_64.zip' -OutFile $zip
+          $dir = "$env:RUNNER_TEMP\protoc"
+          Expand-Archive -Path $zip -DestinationPath $dir
+          Add-Content $env:GITHUB_PATH "$dir\bin"
+          Add-Content $env:GITHUB_ENV "PROTOC=$dir\bin\protoc.exe"
+          & "$dir\bin\protoc.exe" --version
+
+      - name: Install Rust toolchain
+        run: |
+          rustup show active-toolchain
+          rustup target add x86_64-pc-windows-gnu
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: grok-build-mingw
+          save-if: ${{ github.event_name == 'push' }}
+          cache-all-crates: false
+
+      - name: Build
+        run: cargo build --target x86_64-pc-windows-gnu -p xai-grok-pager-bin --release
+
+      # Asset name matches the auto-updater's download pattern:
+      # igrok-{version}-{platform}* with platform = {os}-{arch}.
+      - name: Create GitHub release with igrok.exe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VER="${TAG#v}"
+          ASSET="igrok-${VER}-windows-x86_64.exe"
+          cp "target/x86_64-pc-windows-gnu/release/igrok.exe" "/tmp/${ASSET}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" "/tmp/${ASSET}#${ASSET}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" \
+              --title "igrok ${VER}" \
+              --notes "igrok ${VER} — built from ${TAG} (windows-amd64, cross-compiled from macOS)." \
+              --latest \
+              "/tmp/${ASSET}#${ASSET}" \
+              --repo "$GITHUB_REPOSITORY"
+          fi

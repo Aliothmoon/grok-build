@@ -1002,7 +1002,7 @@ fn test_reinstall_hint_gh_release_mentions_gh_command() {
         "should suggest gh release download: {hint}"
     );
     assert!(
-        hint.contains("xai-org-shared/grok-build"),
+        hint.contains("Aliothmoon/grok-build"),
         "should name the repo: {hint}"
     );
 }

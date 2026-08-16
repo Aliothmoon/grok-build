@@ -21,7 +21,7 @@ pub mod instrumentation;
 pub mod memory_log;
 pub mod memory_telemetry;
 pub mod otel_layer;
-pub(crate) mod otlp_http;
+
 pub mod prompt_timing;
 pub(crate) mod redact_common;
 pub mod sampling_log;

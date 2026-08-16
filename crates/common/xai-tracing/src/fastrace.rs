@@ -1,5 +1,4 @@
 use fastrace::prelude::*;
-use opentelemetry_otlp::ExporterBuildError;
 use std::borrow::Cow;
 
 // Fastrace initialization
@@ -7,7 +6,7 @@ pub fn init_fastrace(
     endpoint: String,
     name: String,
     resource_attributes: impl IntoIterator<Item = (String, String)>,
-) -> Result<(), ExporterBuildError> {
+) -> Result<(), std::convert::Infallible> {
     // [LOCAL-DEV] Telemetry removed: never register an OTLP reporter, so
     // fastrace spans are never exported off-host (workspace daemon).
     let _ = (endpoint, name, resource_attributes);

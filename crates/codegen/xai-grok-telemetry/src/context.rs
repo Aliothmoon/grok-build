@@ -5,10 +5,15 @@ pub struct GitContext {
 }
 
 pub fn collect_git_context(cwd: &str) -> GitContext {
-    use git2::Repository;
+    // [LOCAL-DEV] git2 (vendored libgit2) removed for build speed: a `.git`
+    // presence walk is equivalent for the is-git-repo event attribute.
     use std::path::Path;
-
-    GitContext {
-        is_git_repo: Repository::discover(Path::new(cwd)).is_ok(),
+    let mut dir = Some(Path::new(cwd));
+    while let Some(d) = dir {
+        if d.join(".git").exists() {
+            return GitContext { is_git_repo: true };
+        }
+        dir = d.parent();
     }
+    GitContext { is_git_repo: false }
 }

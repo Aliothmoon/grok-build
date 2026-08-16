@@ -10,7 +10,6 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use chrono::{Local, SecondsFormat};
 use serde_json::json;
-use xai_mixpanel::Mixpanel;
 
 use crate::config::{TelemetryConfig, TelemetryMode, deployment_id_from_key};
 use crate::http::OriginClientInfo;
@@ -49,7 +48,6 @@ pub struct TelemetryClient {
     mode: TelemetryMode,
     events_url: Option<String>,
     events_api_key: Option<String>,
-    mixpanel: Option<Arc<Mixpanel>>,
     user_id: Option<String>,
     team_id: Option<String>,
     deployment_id: Option<String>,
@@ -68,7 +66,6 @@ impl std::fmt::Debug for TelemetryClient {
                 "events_api_key",
                 &self.events_api_key.as_ref().map(|_| "***"),
             )
-            .field("mixpanel", &self.mixpanel.as_ref().map(|_| "configured"))
             .finish()
     }
 }
@@ -85,14 +82,8 @@ impl TelemetryClient {
         subscription_tier: Option<String>,
         http_client: reqwest::Client,
     ) -> Self {
-        let mixpanel = if config.mixpanel_enabled {
-            config
-                .mixpanel_token
-                .as_ref()
-                .map(|token| Arc::new(Mixpanel::new(token.as_str())))
-        } else {
-            None
-        };
+        // [LOCAL-DEV] Mixpanel emission removed.
+        let _ = (&config.mixpanel_enabled, &config.mixpanel_token);
         let deployment_id = deployment_key
             .filter(|s| !s.is_empty())
             .map(|k| deployment_id_from_key(&k));
@@ -105,7 +96,6 @@ impl TelemetryClient {
             mode,
             events_url: config.events_url,
             events_api_key: config.events_api_key,
-            mixpanel,
             user_id,
             team_id,
             deployment_id,
@@ -244,25 +234,8 @@ pub async fn track(event_name: &str, request_id: &str, ctx: &UserContext, mut me
             .await;
     }
 
-    // Mixpanel path
-    if let Some(ref mixpanel) = client.mixpanel {
-        let time_secs = chrono::Utc::now().timestamp();
-        let insert_id = product_analytics_insert_id();
-
-        // Convert serde_json::Map to HashMap for mixpanel
-        let mut props: std::collections::HashMap<String, serde_json::Value> =
-            metadata.into_iter().collect();
-        props.insert("distinct_id".into(), json!(user_id));
-        props.insert("time".into(), json!(time_secs));
-        props.insert("$insert_id".into(), json!(insert_id));
-        props.insert("app_name".into(), json!("Grok Code"));
-        props.insert("user_type".into(), json!("LoggedIn"));
-        props.insert("country".into(), json!(ctx.country));
-        props.insert("language".into(), json!(ctx.language));
-        props.insert("locale".into(), json!("English"));
-
-        let _ = mixpanel.track(event_name, Some(props)).await;
-    }
+    // [LOCAL-DEV] Mixpanel path removed.
+    let _ = (&client.user_id, user_id);
 }
 
 /// Resolved mode of the initialized client, `None` when off. Lets a parent
@@ -294,35 +267,8 @@ pub fn sync_profile() {
         return;
     }
 
-    let Some(mixpanel) = client.mixpanel.clone() else {
-        return;
-    };
-
-    let agent_id = crate::id::agent_id();
-    let user_id = client.user_id.as_deref().unwrap_or(&agent_id).to_owned();
-
-    tokio::spawn(async move {
-        let mut props = std::collections::HashMap::new();
-        props.insert("agent_id".into(), json!(agent_id));
-        props.insert("shell_version".into(), json!(client.shell_version));
-        props.insert("app_name".into(), json!("Grok Code"));
-        if let Some(ref client_type) = client.client_type {
-            props.insert("client_type".into(), json!(client_type));
-        }
-        if let Some(ref client_version) = client.client_version {
-            props.insert("client_version".into(), json!(client_version));
-        }
-        if let Some(ref deployment_id) = client.deployment_id {
-            props.insert("deployment_id".into(), json!(deployment_id));
-        }
-        if let Some(ref team_id) = client.team_id {
-            props.insert("team_id".into(), json!(team_id));
-        }
-        if let Some(ref subscription_tier) = client.subscription_tier {
-            props.insert("subscription_tier".into(), json!(subscription_tier));
-        }
-        let _ = mixpanel.engage(&user_id, props).await;
-    });
+    // [LOCAL-DEV] Mixpanel profile sync removed.
+    let _ = client;
 }
 
 /// Initialize telemetry client. Safe to call multiple times.

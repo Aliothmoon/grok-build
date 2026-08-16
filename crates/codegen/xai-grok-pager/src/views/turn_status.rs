@@ -309,7 +309,7 @@ pub fn detect_cache_miss(prev: &LastTurnStats, cur: &LastTurnStats) -> Option<Ca
         return None;
     }
     let cur_cached = cur.cached_prompt_tokens.unwrap_or(0);
-    let cur_reported_cache = cur_cached > 0;
+    let _cur_reported_cache = cur_cached > 0;
     // A zero-cache turn only counts when cache activity was reported before:
     // on cache-read-only providers that is a total miss, while on providers
     // that never report caching it means nothing.

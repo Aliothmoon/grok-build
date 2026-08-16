@@ -284,7 +284,7 @@ pub fn sync_profile() {
 /// telemetry posts.
 pub fn init(
     config: TelemetryConfig,
-    mode: TelemetryMode,
+    _mode: TelemetryMode,
     user_id: Option<String>,
     team_id: Option<String>,
     deployment_key: Option<String>,
@@ -323,7 +323,7 @@ pub fn init(
 /// is already set, so safe to call unconditionally after auth succeeds.
 pub fn init_if_needed(
     config: TelemetryConfig,
-    mode: TelemetryMode,
+    _mode: TelemetryMode,
     user_id: Option<String>,
     team_id: Option<String>,
     deployment_key: Option<String>,

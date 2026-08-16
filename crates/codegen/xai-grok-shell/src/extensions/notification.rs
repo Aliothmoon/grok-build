@@ -553,6 +553,31 @@ pub enum SessionUpdate {
         /// The hook message to display (e.g., "🪝 Running post_tool_use hooks for `Edit`...")
         message: String,
     },
+    /// [LOCAL-DEV] Per-response sampling statistics footer, rendered as a
+    /// muted one-liner after each model response:
+    /// `TPS 16.8 tok/s | TTFT 5.6s | 54.0s | ↑ 1.9k | ↓ 732`.
+    TurnStats {
+        /// Time to first token, milliseconds.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        ttft_ms: Option<u64>,
+        /// Decode throughput (completion tokens / decode window).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        tokens_per_sec: Option<f64>,
+        /// Wall-clock inference duration, milliseconds.
+        elapsed_ms: u64,
+        /// Prompt tokens billed for this response.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        prompt_tokens: Option<u64>,
+        /// Completion tokens billed for this response.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        completion_tokens: Option<u64>,
+        /// Prompt tokens served from cache.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cached_prompt_tokens: Option<u64>,
+        /// Reasoning/thinking tokens (subset of completion on most providers).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reasoning_tokens: Option<u64>,
+    },
     /// Structured hook execution data attached to tool call blocks.
     HookExecution {
         /// The hook event name ("pre_tool_use" or "post_tool_use").

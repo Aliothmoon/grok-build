@@ -238,7 +238,8 @@ pub(super) fn handle_session_notification_with_origin(
         | XaiSessionUpdate::ImageDropped { .. }
         | XaiSessionUpdate::MemoryFlushCompleted { .. }
         | XaiSessionUpdate::MemoryDreamCompleted { .. }
-        | XaiSessionUpdate::MemorySessionSaved { .. }) => {
+        | XaiSessionUpdate::MemorySessionSaved { .. }
+        | XaiSessionUpdate::TurnStats { .. }) => {
             let changed = apply_session_event(
                 update,
                 &mut agent.session,
@@ -1480,6 +1481,27 @@ pub(super) fn apply_session_event(
             let message = notes.join("\n");
             tracing::info!("Image dropped: {message}");
             scrollback.push_block(RenderBlock::system(message));
+            true
+        }
+        // [LOCAL-DEV] Per-response stats footer: muted one-liner block.
+        XaiSessionUpdate::TurnStats {
+            ttft_ms,
+            tokens_per_sec,
+            elapsed_ms,
+            prompt_tokens,
+            completion_tokens,
+            cached_prompt_tokens,
+            reasoning_tokens,
+        } => {
+            scrollback.push_block(RenderBlock::session_event(SessionEvent::TurnStats {
+                ttft_ms: *ttft_ms,
+                tokens_per_sec: *tokens_per_sec,
+                elapsed_ms: *elapsed_ms,
+                prompt_tokens: *prompt_tokens,
+                completion_tokens: *completion_tokens,
+                cached_prompt_tokens: *cached_prompt_tokens,
+                reasoning_tokens: *reasoning_tokens,
+            }));
             true
         }
         _ => false,

@@ -77,3 +77,39 @@ jobs:
           path: target/x86_64-pc-windows-gnu/release/igrok.exe
           compression-level: 0
           if-no-files-found: error
+
+  # [LOCAL-DEV] host-target unit tests for the crates we actively modify.
+  # Windows-only gaps (bash-syntax fixtures, PTY e2e) stay out of scope.
+  test:
+    name: Unit tests (macOS host)
+    runs-on: macos-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install protoc
+        run: |
+          arch=$(uname -m | sed 's/arm64/aarch_64/')
+          curl -fsSL -o /tmp/protoc.zip \
+            "https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protoc-29.3-osx-${arch}.zip"
+          unzip -q /tmp/protoc.zip -d /tmp/protoc
+          echo "/tmp/protoc/bin" >> "$GITHUB_PATH"
+          echo "PROTOC=/tmp/protoc/bin/protoc" >> "$GITHUB_ENV"
+
+      - name: Install Rust toolchain
+        run: rustup show active-toolchain
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: grok-build-test
+          save-if: ${{ github.event_name == 'push' }}
+          cache-all-crates: false
+
+      - name: Test
+        run: |
+          cargo test -p xai-grok-telemetry --lib
+          cargo test -p xai-grok-pager --lib
+          cargo test -p xai-grok-shell --lib

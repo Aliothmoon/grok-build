@@ -152,6 +152,8 @@ parking_lot.workspace = true
 # signal-hook: SIGWINCH handler for the `grok wrap` PTY wrapper (pty_wrap.rs).
 # libc: poll/read for non-blocking terminal reads in theme/osc11.rs.
 [target.'cfg(unix)'.dependencies]
+# [LOCAL-DEV] real-PTY test harness; unix-only so `cargo test` stays compilable on Windows
+xai-grok-pager-pty-harness = { path = "../xai-grok-pager-pty-harness" }
 nix = { workspace = true, features = ["signal"] }
 signal-hook = { workspace = true }
 libc = { workspace = true }
@@ -176,7 +178,6 @@ criterion = { workspace = true }
 tempfile = { workspace = true }
 serial_test = { workspace = true }
 xai-grok-agent = { workspace = true }
-xai-grok-pager-pty-harness = { path = "../xai-grok-pager-pty-harness" }
 # In-process leader-cluster harness (mock inference server; no cycle:
 # xai-grok-test-support depends on neither the pager nor the shell).
 xai-grok-test-support = { workspace = true, features = [] }

@@ -398,8 +398,9 @@ mod tests {
         }
         let _clear = ClearClient;
 
-        // Mixpanel configured, but no events endpoint: the global must never
-        // carry a live funnel out of this test.
+        // [LOCAL-DEV] With telemetry removed, init must never install a
+        // client regardless of mode — the global stays None even with Mixpanel
+        // config present.
         let cfg = TelemetryConfig {
             mixpanel_enabled: true,
             mixpanel_token: Some("test-token".into()),
@@ -421,8 +422,8 @@ mod tests {
         // Explicit call must no-op too (init already invoked it once).
         sync_profile();
         assert!(
-            is_session_metrics_enabled(),
-            "client must be live for session metrics"
+            !is_session_metrics_enabled(),
+            "telemetry removed: no client may be installed in session-metrics mode"
         );
         assert!(!is_enabled(), "product analytics must stay off");
     }

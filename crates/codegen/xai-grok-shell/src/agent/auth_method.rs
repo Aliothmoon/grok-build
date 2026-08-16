@@ -385,8 +385,16 @@ impl ModelByok {
 /// demote on `Unknown`). It refreshes when `endpoint_is_first_party` — the
 /// request targets a first-party host (cli-chat-proxy / first-party API),
 /// where sending the session token cannot leak to a third-party BYOK
-/// endpoint. A definite `NotByok` always refreshes (it only ever routes to
-/// the session endpoint); a definite `Byok` never does.
+/// endpoint. A definite `NotByok` refreshes on first-party hosts (it only
+/// ever routes to the session endpoint there); a definite `Byok` never does.
+///
+/// [LOCAL-DEV] `NotByok` is additionally gated on `endpoint_is_first_party`:
+/// this fork supports third-party `[model.*]` entries whose credentials live
+/// entirely in `extra_headers` (no `api_key`/`env_key`, so BYOK status is
+/// `NotByok` while the base_url is third-party). Upstream's "NotByok only
+/// ever routes to the session endpoint" premise does not hold here — the
+/// session bearer must not ride on third-party endpoints (token leak, and
+/// strict providers reject the request outright).
 pub(crate) fn session_token_auth_gate(
     is_session_based_method: bool,
     model_byok: ModelByok,
@@ -394,7 +402,7 @@ pub(crate) fn session_token_auth_gate(
 ) -> bool {
     is_session_based_method
         && match model_byok {
-            ModelByok::NotByok => true,
+            ModelByok::NotByok => endpoint_is_first_party,
             ModelByok::Byok => false,
             ModelByok::Unknown => endpoint_is_first_party,
         }

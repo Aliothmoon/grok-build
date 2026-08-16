@@ -942,7 +942,18 @@ impl SessionActor {
             } else {
                 None
             };
-        let auth_recovery_eligible = matches!(error.kind, SamplingErrorKind::Auth) && {
+        // [LOCAL-DEV] Third-party provider short-circuit: a request that left
+        // for a non-first-party base_url (and has no `[auth_provider.*]`
+        // refresh hook) must not run xAI session recovery — refreshing the
+        // grok session cannot fix a rejected provider credential, and the
+        // upstream error must surface verbatim instead of the `/login`
+        // banner.
+        let third_party_provider = auth_provider.is_none()
+            && !failed_base_url.is_empty()
+            && !crate::util::is_xai_api_url(&failed_base_url);
+        let auth_recovery_eligible = !third_party_provider
+            && matches!(error.kind, SamplingErrorKind::Auth)
+            && {
             let gate = self.auth_gate(&failed_model_id, &failed_base_url);
             let eligible = gate.active();
             self.log_auth_gate_unknown("handle_sampling_failure", gate, &failed_base_url);
@@ -1077,7 +1088,19 @@ impl SessionActor {
             error.status_code == Some(404) && detailed_message.contains("does not exist");
         let is_auth_401 =
             error.status_code == Some(401) || matches!(error.kind, SamplingErrorKind::Auth);
-        let detailed_message = if is_model_404 || is_auth_401 {
+        let detailed_message = if third_party_provider {
+            // [LOCAL-DEV] Keep the provider's own error text front and center;
+            // the xAI auth-mode/model-list appendix below would only mislead.
+            if is_auth_401 {
+                format!(
+                    "{detailed_message}\n\n  This model targets a third-party endpoint \
+                     (check its api_key / extra_headers / env_key in config.toml). \
+                     `/login` will not help."
+                )
+            } else {
+                detailed_message
+            }
+        } else if is_model_404 || is_auth_401 {
             let current_model = self
                 .chat_state_handle
                 .get_sampling_config()
@@ -1123,13 +1146,20 @@ impl SessionActor {
         } else {
             error.kind.as_str()
         };
-        let (error_type, detailed_message) = match self.auth_manager.as_ref() {
-            Some(auth_manager) if error_type == "auth" => self.apply_auth_remedy(
-                &auth_manager.auth_remedy(),
-                detailed_message,
-                error.status_code,
-            ),
-            _ => (error_type, detailed_message),
+        let (error_type, detailed_message) = if third_party_provider && is_auth_401 {
+            // [LOCAL-DEV] `provider`: rejected by the third-party endpoint —
+            // excluded from the pager's re-auth prompt (see
+            // `is_reauthable_failure`); the message above is the remedy.
+            ("provider", detailed_message)
+        } else {
+            match self.auth_manager.as_ref() {
+                Some(auth_manager) if error_type == "auth" => self.apply_auth_remedy(
+                    &auth_manager.auth_remedy(),
+                    detailed_message,
+                    error.status_code,
+                ),
+                _ => (error_type, detailed_message),
+            }
         };
         self.log_terminal_failure(error_type, error.status_code, &detailed_message);
         self.send_xai_notification(XaiSessionUpdate::RetryState(

@@ -452,6 +452,12 @@
             Some("legacy_auth"),
             "Unauthorized (401) ... deprecated authentication method"
         ));
+        // [LOCAL-DEV] Third-party provider rejections carry their own remedy
+        // in the message; never raise the `/login` banner for them.
+        assert!(!is_reauthable_failure(
+            Some("provider"),
+            "Unauthorized (401) from https://open.bigmodel.cn/api/anthropic/v1/messages: 令牌已过期或验证不正确"
+        ));
         // auth_transient = the shell says the failure self-heals (refreshable
         // credential, no sticky verdict — e.g. post-wake network gap). Even
         // with a 401 in the message, the `/login` banner must not fire.

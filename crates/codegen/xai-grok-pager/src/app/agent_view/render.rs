@@ -1554,6 +1554,21 @@ impl AgentView {
             );
         }
         let ctx_used = self.context_state.as_ref().map(|c| c.used);
+        // [LOCAL-DEV] bottom-right session totals: `↑ 1.4M | ↓ 299k | c 99.8%`
+        // (prompt-side / completion / cache hit rate over billed prompt tokens).
+        if let Some(u) = self.session.session_usage.filter(|u| u.prompt > 0) {
+            let hit = (u.cached_read as f64 / u.prompt as f64) * 100.0;
+            let line = format!(
+                "↑ {} | ↓ {} | c {:.1}%",
+                context_bar::fmt_tokens(u.prompt),
+                context_bar::fmt_tokens(u.output),
+                hit
+            );
+            status.push(
+                "session_usage",
+                Line::from(Span::styled(line, Style::default().fg(theme.text_secondary))),
+            );
+        }
         let model_window = self.session.models.get_context_window();
         let ctx_total = self
             .context_state

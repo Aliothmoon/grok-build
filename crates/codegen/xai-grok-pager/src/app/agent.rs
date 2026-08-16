@@ -703,6 +703,17 @@ pub struct DeferredModelSwitch {
 /// External code should use the facade methods (`handle_update`,
 /// `start_turn`, `finish_turn`, `turn_activity`) instead of accessing
 /// the tracker directly.
+/// [LOCAL-DEV] Session-cumulative usage totals for the bottom-right chip.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SessionUsageTotals {
+    /// All prompt-side tokens billed (input + cache read + cache write).
+    pub prompt: u64,
+    /// All completion tokens.
+    pub output: u64,
+    /// Prompt tokens served from cache (subset of `prompt`).
+    pub cached_read: u64,
+}
+
 pub struct AgentSession {
     pub id: AgentId,
     pub acp_tx: AcpAgentTx,
@@ -817,6 +828,9 @@ pub struct AgentSession {
     /// [LOCAL-DEV] Last response's sampling stats, pinned above the prompt
     /// while idle (TPS / TTFT / duration / token deltas).
     pub last_turn_stats: Option<crate::views::turn_status::LastTurnStats>,
+    /// [LOCAL-DEV] Session-cumulative usage for the bottom-right chip
+    /// (↑ prompt / ↓ output / cache hit rate).
+    pub session_usage: Option<SessionUsageTotals>,
     /// [LOCAL-DEV] Previous response's stats (cache-miss baseline). Cleared
     /// on compaction (context legitimately changed) and turn cancel.
     pub prev_turn_for_cache: Option<crate::views::turn_status::LastTurnStats>,
@@ -1202,6 +1216,7 @@ mod tests {
             scheduled_tasks: HashMap::new(),
             in_flight_prompt: None,
             last_turn_stats: None,
+            session_usage: None,
             prev_turn_for_cache: None,
             compact_held_prompt: None,
             current_prompt_id: None,

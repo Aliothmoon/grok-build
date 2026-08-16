@@ -279,8 +279,20 @@ pub(super) fn handle_session_notification_with_origin(
             prompt_id,
             stop_reason,
             agent_result,
-            ..
+            // [LOCAL-DEV] session-cumulative usage for the bottom-right
+            // status chip (↑ prompt / ↓ output / cache hit rate).
+            usage,
         } => {
+            if let Some(u) = usage.as_ref() {
+                agent.session.session_usage =
+                    Some(crate::app::agent::SessionUsageTotals {
+                    prompt: u.totals.input_tokens
+                        + u.totals.cached_read_tokens
+                        + u.totals.cache_creation_tokens,
+                    output: u.totals.output_tokens,
+                    cached_read: u.totals.cached_read_tokens,
+                });
+            }
             if agent.session.loading_replay {
                 agent.replayed_terminal_prompts.insert(prompt_id);
                 false
@@ -518,6 +530,7 @@ pub(super) fn handle_session_notification_with_origin(
                 deferred_model_switch: None,
                 in_flight_prompt: None,
                 last_turn_stats: None,
+                session_usage: None,
                 prev_turn_for_cache: None,
                 compact_held_prompt: None,
                 current_prompt_id: None,

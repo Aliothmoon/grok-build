@@ -1828,6 +1828,7 @@ fn set_simple_mode_propagates_to_every_agent() {
             in_flight_prompt: None,
             last_turn_stats: None,
             prev_turn_for_cache: None,
+            session_usage: None,
             compact_held_prompt: None,
             current_prompt_id: None,
             created_via_new: false,

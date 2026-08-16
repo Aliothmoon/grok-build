@@ -46,6 +46,7 @@ pub(super) fn make_session(session_id: Option<&str>) -> AgentSession {
         scheduled_tasks: std::collections::HashMap::new(),
         in_flight_prompt: None,
             last_turn_stats: None,
+            session_usage: None,
             prev_turn_for_cache: None,
         compact_held_prompt: None,
         current_prompt_id: None,

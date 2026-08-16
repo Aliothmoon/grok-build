@@ -110,6 +110,8 @@ xai-grok-telemetry = { workspace = true }
 xai-fast-worktree = { path = "../xai-fast-worktree", features = ["metadata"] }
 backon = { workspace = true }
 chrono = { workspace = true }
+# [LOCAL-DEV] `igrok usage`: fetch models.dev price catalog on demand
+reqwest = { workspace = true, default-features = false, features = ["rustls-tls", "json"] }
 flate2 = { workspace = true }
 tar = { workspace = true }
 xai-grok-tools = { workspace = true }

@@ -47,6 +47,9 @@ struct ModelTally {
     reasoning_tokens: u64,
     model_calls: u64,
     api_ms: u64,
+    /// Provider-reported cost for these turns (ccusage `costUSD` semantics),
+    /// when the response carried one.
+    self_reported_usd: f64,
     /// USD cost when every component has a known price, else `None`.
     cost_usd: Option<f64>,
 }
@@ -66,9 +69,9 @@ struct Prices {
     cache_write: Option<f64>,
 }
 
-pub fn run(args: UsageArgs) -> Result<()> {
+pub async fn run(args: UsageArgs) -> Result<()> {
     let sessions_root = xai_grok_shell::util::grok_home::grok_home().join("sessions");
-    let prices = load_model_prices();
+    let prices = load_model_prices().await;
 
     // group key -> (model -> tally)
     let mut groups: BTreeMap<String, BTreeMap<String, ModelTally>> = BTreeMap::new();
@@ -103,18 +106,30 @@ pub fn run(args: UsageArgs) -> Result<()> {
             };
             // The record's own usage is the turn total; modelUsage splits it
             // per model. Use the split when present, else the outer block.
+            let self_reported_usd = usage
+                .get("costUsdTicks")
+                .or_else(|| usage.get("costUSDTicks"))
+                .and_then(|t| t.as_i64())
+                .map(|ticks| ticks as f64 / 1e10);
             if let Some(models) = usage
                 .get("modelUsage")
                 .and_then(|m| m.as_object())
                 .filter(|m| !m.is_empty())
             {
+                // Multi-model turns carry only a turn-level cost that cannot
+                // be attributed per model — leave those to the price table.
+                let attributable = models.len() == 1;
                 for (model, mv) in models {
-                    tally_entry(
-                        &mut groups,
-                        group_key(&args, ts, &session_id),
-                        model,
-                        mv,
-                    );
+                    let key = group_key(&args, ts, &session_id);
+                    tally_entry(&mut groups, key.clone(), model, mv);
+                    if attributable
+                        && let Some(usd) = self_reported_usd
+                        && let Some(tally) = groups
+                            .get_mut(&key)
+                            .and_then(|m| m.get_mut(model.as_str()))
+                    {
+                        tally.self_reported_usd += usd;
+                    }
                 }
             } else {
                 let model = usage
@@ -122,20 +137,28 @@ pub fn run(args: UsageArgs) -> Result<()> {
                     .and_then(|m| m.as_str())
                     .unwrap_or("unknown");
                 let outer = serde_json::Value::Object(usage.clone());
-                tally_entry(
-                    &mut groups,
-                    group_key(&args, ts, &session_id),
-                    model,
-                    &outer,
-                );
+                let key = group_key(&args, ts, &session_id);
+                tally_entry(&mut groups, key.clone(), model, &outer);
+                if let Some(usd) = self_reported_usd
+                    && let Some(tally) = groups
+                        .get_mut(&key)
+                        .and_then(|m| m.get_mut(model))
+                {
+                    tally.self_reported_usd += usd;
+                }
             }
         }
     }
 
-    // cost pass (needs the completed tallies)
+    // cost pass (needs the completed tallies): ccusage `auto` semantics —
+    // a provider-reported cost wins over the price table.
     for models in groups.values_mut() {
         for (model, tally) in models.iter_mut() {
-            tally.cost_usd = estimate_cost(&prices, model, tally);
+            tally.cost_usd = if tally.self_reported_usd > 0.0 {
+                Some(tally.self_reported_usd)
+            } else {
+                estimate_cost(&prices, model, tally)
+            };
         }
     }
 
@@ -224,20 +247,59 @@ fn session_update_files(root: &std::path::Path) -> Vec<PathBuf> {
 
 // ── pricing ─────────────────────────────────────────────────────────────────
 
-/// `model id suffix -> prices` from the models.dev cache.
-fn load_model_prices() -> BTreeMap<String, Prices> {
+/// models.dev catalog URL + cache TTL, shared with the shell's dev-catalog
+/// refresh (same cache file, so a TUI session keeps this fresh for free).
+const MODELS_DEV_API: &str = "https://models.dev/api.json";
+const PRICE_CACHE_TTL_SECS: u64 = 24 * 60 * 60;
+
+fn price_cache_path() -> PathBuf {
+    xai_grok_shell::util::grok_home::grok_home().join("models_dev_catalog.json")
+}
+
+/// `model id -> prices`, ccusage-style: fresh cache first, one network fetch
+/// when stale/missing (stored back into the shared cache), stale-cache
+/// fallback offline.
+async fn load_model_prices() -> BTreeMap<String, Prices> {
+    let path = price_cache_path();
+    let cached = std::fs::read_to_string(&path)
+        .ok()
+        .and_then(|txt| serde_json::from_str::<serde_json::Value>(&txt).ok().map(|c| (txt, c)));
+    let fresh = cached.as_ref().is_some_and(|(_, c)| {
+        c.get("fetched_at")
+            .and_then(|t| t.as_u64())
+            .is_some_and(|at| now_ts().saturating_sub(at) < PRICE_CACHE_TTL_SECS)
+    });
+    if !fresh {
+        eprintln!("Fetching model prices from models.dev …");
+        if let Ok(body) = fetch_models_dev().await {
+            let stamped = serde_json::json!({ "fetched_at": now_ts(), "raw": body });
+            let _ = std::fs::write(&path, stamped.to_string());
+            return parse_prices(&body);
+        }
+        if cached.is_none() {
+            eprintln!("(offline and no cached price catalog — costs will show '-')");
+        }
+    }
+    // fresh cache, or stale fallback offline
+    match cached {
+        Some((_, c)) => {
+            let raw = c.get("raw").and_then(|r| r.as_str()).unwrap_or("");
+            parse_prices(raw)
+        }
+        None => BTreeMap::new(),
+    }
+}
+
+async fn fetch_models_dev() -> Result<String> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(20))
+        .build()?;
+    let resp = client.get(MODELS_DEV_API).send().await?.error_for_status()?;
+    Ok(resp.text().await?)
+}
+
+fn parse_prices(raw: &str) -> BTreeMap<String, Prices> {
     let mut map = BTreeMap::new();
-    let Ok(raw_file) =
-        std::fs::read_to_string(xai_grok_shell::util::grok_home::grok_home().join(
-            "models_dev_catalog.json",
-        ))
-    else {
-        return map;
-    };
-    let Ok(cache) = serde_json::from_str::<serde_json::Value>(&raw_file) else {
-        return map;
-    };
-    let raw = cache.get("raw").and_then(|r| r.as_str()).unwrap_or("");
     let Ok(catalog) = serde_json::from_str::<serde_json::Value>(raw) else {
         return map;
     };
@@ -493,24 +555,24 @@ mod tests {
     /// End-to-end against the local `~/.igrok/sessions` tree (empty on CI:
     /// asserts the no-records path). Run with --nocapture to eyeball the
     /// table on a machine with real sessions.
-    #[test]
-    fn usage_run_day_ok() {
+    #[tokio::test]
+    async fn usage_run_day_ok() {
         let args = UsageArgs {
             by: UsageGroupBy::Day,
             since: None,
             json: false,
         };
-        assert!(run(args).is_ok());
+        assert!(run(args).await.is_ok());
     }
 
-    #[test]
-    fn usage_run_session_json_ok() {
+    #[tokio::test]
+    async fn usage_run_session_json_ok() {
         let args = UsageArgs {
             by: UsageGroupBy::Session,
             since: Some(30),
             json: true,
         };
-        assert!(run(args).is_ok());
+        assert!(run(args).await.is_ok());
     }
 
     #[test]

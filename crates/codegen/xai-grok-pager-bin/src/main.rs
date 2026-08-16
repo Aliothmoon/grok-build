@@ -2045,7 +2045,7 @@ async fn async_main(args: PagerArgs) -> Result<()> {
             Command::Usage(usage_args) => {
                 init_tracing_simple("cli");
                 let _otel_guard = xai_grok_telemetry::otel_layer::otel_guard();
-                return xai_grok_pager::usage_cmd::run(usage_args);
+                return xai_grok_pager::usage_cmd::run(usage_args).await;
             }
             Command::Leader(leader_args) => {
                 init_tracing_simple("cli");

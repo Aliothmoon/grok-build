@@ -113,6 +113,7 @@ async fn persist_ack_waits_for_disk_flush_before_success() {
             );
             let actor = Arc::new(SessionActor {
                 session_info,
+                last_response_at: parking_lot::Mutex::new(None),
                 auth_method_id: test_auth_method_id("test-auth"),
                 model_auth_memo: std::cell::RefCell::new(None),
                 attribution_callback: None,
@@ -594,6 +595,7 @@ async fn first_turn_memory_injection_disabled_does_not_persist_to_chat_history()
             let (event_tx, _event_rx) = tokio::sync::mpsc::unbounded_channel::<SessionEvent>();
             let actor = Arc::new(SessionActor {
                 session_info: session_info.clone(),
+                last_response_at: parking_lot::Mutex::new(None),
                 auth_method_id: test_auth_method_id("test-auth"),
                 model_auth_memo: std::cell::RefCell::new(None),
                 attribution_callback: None,
@@ -890,6 +892,7 @@ async fn cancel_running_task_teardown_clears_running_and_pending_work() {
                     id: acp::SessionId::new("test-cancel"),
                     cwd: cwd.as_str().to_string(),
                 },
+                last_response_at: parking_lot::Mutex::new(None),
                 auth_method_id: test_auth_method_id("test-auth"),
                 model_auth_memo: std::cell::RefCell::new(None),
                 attribution_callback: None,
@@ -2422,6 +2425,7 @@ async fn cancel_propagates_to_sampler_handle_so_no_further_emission() {
                     id: acp::SessionId::new("test-cancel-sampler"),
                     cwd: cwd.as_str().to_string(),
                 },
+                last_response_at: parking_lot::Mutex::new(None),
                 auth_method_id: test_auth_method_id("test-auth"),
                 model_auth_memo: std::cell::RefCell::new(None),
                 attribution_callback: None,

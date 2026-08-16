@@ -133,6 +133,7 @@ async fn test_e2e_idle_resume_refreshes_model_metadata() {
                     id: acp::SessionId::new("test-idle-resume"),
                     cwd: cwd.as_str().to_string(),
                 },
+                last_response_at: parking_lot::Mutex::new(None),
                 attribution_callback: None,
                 auth_method_id: test_auth_method_id("cached_token"),
                 model_auth_memo: std::cell::RefCell::new(None),

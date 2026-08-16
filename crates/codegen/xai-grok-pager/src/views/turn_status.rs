@@ -1185,6 +1185,7 @@ mod tests {
             false,
             None,
             Watchers::default(),
+            false,
             false
         ));
         assert!(should_show(
@@ -1192,6 +1193,7 @@ mod tests {
             false,
             None,
             Watchers::default(),
+            false,
             false
         ));
         assert!(!should_show(
@@ -1199,6 +1201,7 @@ mod tests {
             false,
             None,
             Watchers::default(),
+            false,
             false
         ));
     }
@@ -1230,6 +1233,7 @@ mod tests {
                 flat_background: false,
                 held_queue: 0,
                 held_queue_top_sendable: false,
+                last_stats: None,
             },
         );
         assert!(
@@ -1250,6 +1254,7 @@ mod tests {
             true,
             None,
             Watchers::default(),
+            false,
             false
         ));
     }
@@ -1277,7 +1282,7 @@ mod tests {
                 ..Watchers::default()
             },
         ] {
-            assert!(should_show(&AgentState::Idle, false, None, watchers, false));
+            assert!(should_show(&AgentState::Idle, false, None, watchers, false, false));
         }
         // Idle with no watchers and nothing else pending → hidden.
         assert!(!should_show(
@@ -1285,6 +1290,7 @@ mod tests {
             false,
             None,
             Watchers::default(),
+            false,
             false
         ));
     }
@@ -1299,14 +1305,16 @@ mod tests {
                 commands: 1,
                 ..Watchers::default()
             },
-            true
+            true,
+            false
         ));
         assert!(should_show(
             &AgentState::TurnRunning,
             false,
             None,
             Watchers::default(),
-            true
+            true,
+            false
         ));
     }
 
@@ -1323,6 +1331,7 @@ mod tests {
             false,
             Some(&seed),
             Watchers::default(),
+            false,
             false
         ));
 
@@ -1338,6 +1347,7 @@ mod tests {
             false,
             Some(&connecting),
             Watchers::default(),
+            false,
             false
         ));
 
@@ -1352,6 +1362,7 @@ mod tests {
             false,
             Some(&expired),
             Watchers::default(),
+            false,
             false
         ));
     }
@@ -1389,6 +1400,7 @@ mod tests {
             flat_background: false,
             held_queue: 0,
             held_queue_top_sendable: false,
+            last_stats: None,
         }
     }
 

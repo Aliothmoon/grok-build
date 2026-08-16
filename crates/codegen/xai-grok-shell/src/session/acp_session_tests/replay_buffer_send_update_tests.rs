@@ -78,6 +78,7 @@ pub(super) async fn make_replay_send_update_fixture() -> ReplaySendUpdateFixture
             id: acp::SessionId::new("test-session"),
             cwd: cwd.as_str().to_string(),
         },
+        last_response_at: parking_lot::Mutex::new(None),
         auth_method_id: test_auth_method_id("test-auth"),
         model_auth_memo: std::cell::RefCell::new(None),
         attribution_callback: None,

@@ -64,8 +64,11 @@ jobs:
           save-if: ${{ github.event_name == 'push' }}
           cache-all-crates: false
 
+      # -static: fully self-contained exe (no libgcc/libwinpthread DLL deps)
       - name: Build
         run: cargo build --target x86_64-pc-windows-gnu -p xai-grok-pager-bin --release
+        env:
+          RUSTFLAGS: -C link-arg=-static
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

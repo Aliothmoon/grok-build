@@ -1326,6 +1326,7 @@ impl AgentView {
             self.mcp_init_progress.as_ref(),
             watchers,
             parked,
+            self.session.last_turn_stats.is_some(),
         ) {
             1
         } else {
@@ -2261,6 +2262,7 @@ impl AgentView {
                         flat_background: false,
                         held_queue,
                         held_queue_top_sendable,
+                        last_stats: self.session.last_turn_stats.as_ref(),
                     },
                 );
                 self.hit_cancel_button

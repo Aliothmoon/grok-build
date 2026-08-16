@@ -544,6 +544,7 @@ fn render_minimal_status(
         minimal_api::mcp_init_progress(agent),
         watchers,
         parked,
+        agent.session.last_turn_stats.is_some(),
     ) {
         render_idle_hint(buf, area, theme);
         return;
@@ -576,6 +577,7 @@ fn render_minimal_status(
             flat_background: true,
             held_queue: minimal_api::held_queue_count(agent),
             held_queue_top_sendable: minimal_api::held_queue_top_sendable(agent),
+            last_stats: agent.session.last_turn_stats.as_ref(),
         },
     );
 }

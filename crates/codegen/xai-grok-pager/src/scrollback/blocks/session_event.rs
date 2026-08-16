@@ -68,25 +68,6 @@ pub enum SessionEvent {
         /// Percentage of context window used (e.g., 85).
         percentage: u8,
     },
-    /// [LOCAL-DEV] Per-response sampling statistics footer:
-    /// `TPS 16.8 tok/s | ~ TTFT 5.6s | + 54.0s | ↑ 1.9k | ↓ 732`.
-    /// Muted one-liner, never a warning banner.
-    TurnStats {
-        /// Time to first token, milliseconds.
-        ttft_ms: Option<u64>,
-        /// Decode throughput (completion tokens / decode window).
-        tokens_per_sec: Option<f64>,
-        /// Wall-clock inference duration, milliseconds.
-        elapsed_ms: u64,
-        /// Prompt tokens billed for this response.
-        prompt_tokens: Option<u64>,
-        /// Completion tokens billed for this response.
-        completion_tokens: Option<u64>,
-        /// Prompt tokens served from cache.
-        cached_prompt_tokens: Option<u64>,
-        /// Reasoning/thinking tokens (subset of completion on most providers).
-        reasoning_tokens: Option<u64>,
-    },
     /// Auto-compaction completed successfully.
     CompactionCompleted {
         /// Tokens used before compaction (`None` from older shells).
@@ -217,43 +198,6 @@ impl SessionEvent {
             }
             SessionEvent::CompactionStarted { percentage } => {
                 format!("Context {percentage}% full. Compacting…")
-            }
-            // [LOCAL-DEV] Per-response stats footer.
-            SessionEvent::TurnStats {
-                ttft_ms,
-                tokens_per_sec,
-                elapsed_ms,
-                prompt_tokens,
-                completion_tokens,
-                cached_prompt_tokens,
-                reasoning_tokens,
-            } => {
-                let mut parts: Vec<String> = Vec::new();
-                if let Some(tps) = tokens_per_sec {
-                    parts.push(format!("TPS {tps:.1} tok/s"));
-                }
-                if let Some(ttft) = ttft_ms {
-                    parts.push(format!("~ TTFT {}", format_secs_short(*ttft)));
-                }
-                parts.push(format!("+ {}", format_secs_short(*elapsed_ms)));
-                if let Some(reasoning) = reasoning_tokens
-                    && *reasoning > 0
-                {
-                    parts.push(format!("Σ {}", format_tokens(*reasoning)));
-                }
-                if let Some(prompt) = prompt_tokens {
-                    let cached = cached_prompt_tokens.unwrap_or(0);
-                    let cached_note = if cached > 0 {
-                        format!(" ({} cached)", format_tokens(cached))
-                    } else {
-                        String::new()
-                    };
-                    parts.push(format!("↑ {}{}", format_tokens(*prompt), cached_note));
-                }
-                if let Some(completion) = completion_tokens {
-                    parts.push(format!("↓ {}", format_tokens(*completion)));
-                }
-                parts.join(" | ")
             }
             SessionEvent::CompactionCompleted {
                 tokens_before,
@@ -401,16 +345,6 @@ fn format_tokens(tokens: u64) -> String {
         format!("{:.1}k", tokens as f64 / 1000.0)
     } else {
         tokens.to_string()
-    }
-}
-
-/// [LOCAL-DEV] Sub-minute durations as `5.6s`; a minute or more defers to
-/// [`format_duration`] (`1m 42s`).
-fn format_secs_short(ms: u64) -> String {
-    if ms >= 60_000 {
-        format_duration(Duration::from_millis(ms))
-    } else {
-        format!("{:.1}s", ms as f64 / 1000.0)
     }
 }
 

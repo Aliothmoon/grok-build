@@ -517,6 +517,7 @@ pub(super) fn handle_session_notification_with_origin(
                 user_model_preference: None,
                 deferred_model_switch: None,
                 in_flight_prompt: None,
+                last_turn_stats: None,
                 compact_held_prompt: None,
                 current_prompt_id: None,
                 created_via_new: false,
@@ -1483,7 +1484,8 @@ pub(super) fn apply_session_event(
             scrollback.push_block(RenderBlock::system(message));
             true
         }
-        // [LOCAL-DEV] Per-response stats footer: muted one-liner block.
+        // [LOCAL-DEV] Per-response stats: pin above the prompt (idle turn
+        // status row), not the scrollback.
         XaiSessionUpdate::TurnStats {
             ttft_ms,
             tokens_per_sec,
@@ -1493,7 +1495,7 @@ pub(super) fn apply_session_event(
             cached_prompt_tokens,
             reasoning_tokens,
         } => {
-            scrollback.push_block(RenderBlock::session_event(SessionEvent::TurnStats {
+            session.last_turn_stats = Some(crate::views::turn_status::LastTurnStats {
                 ttft_ms: *ttft_ms,
                 tokens_per_sec: *tokens_per_sec,
                 elapsed_ms: *elapsed_ms,
@@ -1501,7 +1503,7 @@ pub(super) fn apply_session_event(
                 completion_tokens: *completion_tokens,
                 cached_prompt_tokens: *cached_prompt_tokens,
                 reasoning_tokens: *reasoning_tokens,
-            }));
+            });
             true
         }
         _ => false,

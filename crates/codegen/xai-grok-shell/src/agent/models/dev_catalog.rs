@@ -22,7 +22,8 @@ pub(crate) const DEV_CATALOG_URL: &str = "https://models.dev/api.json";
 pub(crate) const DEV_CATALOG_CACHE_FILE: &str = "models_dev_catalog.json";
 /// Refresh at most once a day; a stale cache is still served (best-effort
 /// offline support) and refreshed in the background.
-pub(crate) const DEV_CATALOG_TTL: std::time::Duration = std::time::Duration::from_secs(24 * 60 * 60);
+pub(crate) const DEV_CATALOG_TTL: std::time::Duration =
+    std::time::Duration::from_secs(24 * 60 * 60);
 const FETCH_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(20);
 /// models.dev provider ids intentionally not expanded.
 const SKIPPED_PROVIDERS: &[&str] = &[
@@ -86,10 +87,7 @@ fn dialect_for(api: Option<&str>) -> Dialect {
     let mut extra_headers = IndexMap::new();
     let (api_backend, auth_scheme) = match api.unwrap_or_default() {
         "anthropic" | "anthropic-messages" | "anthropic-completions" => {
-            extra_headers.insert(
-                "anthropic-version".to_string(),
-                "2023-06-01".to_string(),
-            );
+            extra_headers.insert("anthropic-version".to_string(), "2023-06-01".to_string());
             (ApiBackend::Messages, AuthScheme::XApiKey)
         }
         "openai-responses" => (ApiBackend::Responses, AuthScheme::Bearer),
@@ -108,13 +106,15 @@ fn default_reasoning_efforts() -> Vec<xai_grok_sampling_types::ReasoningEffortOp
     use xai_grok_sampling_types::ReasoningEffort as RE;
     [("low", RE::Low), ("medium", RE::Medium), ("high", RE::High)]
         .into_iter()
-        .map(|(id, value)| xai_grok_sampling_types::ReasoningEffortOption {
-            id: id.to_string(),
-            label: id.to_string(),
-            value,
-            description: None,
-            default: value == RE::Medium,
-        })
+        .map(
+            |(id, value)| xai_grok_sampling_types::ReasoningEffortOption {
+                id: id.to_string(),
+                label: id.to_string(),
+                value,
+                description: None,
+                default: value == RE::Medium,
+            },
+        )
         .collect()
 }
 
@@ -379,10 +379,7 @@ mod tests {
         let e = &entries["anthropic/claude-opus-4-6"];
         assert_eq!(e.info.api_backend, ApiBackend::Messages);
         assert_eq!(e.info.auth_scheme, AuthScheme::XApiKey);
-        assert!(e
-            .info
-            .extra_headers
-            .contains_key("anthropic-version"));
+        assert!(e.info.extra_headers.contains_key("anthropic-version"));
         assert!(e.info.supports_reasoning_effort);
         assert_eq!(e.info.reasoning_efforts.len(), 3);
         // description carries provider + context + pricing

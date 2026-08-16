@@ -193,6 +193,66 @@ pub fn is_sendable_wait(activity: &Option<TurnActivity>) -> bool {
     )
 }
 
+/// [LOCAL-DEV] Last completed response's sampling stats, pinned above the
+/// prompt while idle. Refreshed on every `SessionUpdate::TurnStats`.
+#[derive(Debug, Clone, Default)]
+pub struct LastTurnStats {
+    /// Time to first token, milliseconds.
+    pub ttft_ms: Option<u64>,
+    /// Decode throughput (completion tokens / decode window).
+    pub tokens_per_sec: Option<f64>,
+    /// Wall-clock inference duration, milliseconds.
+    pub elapsed_ms: u64,
+    /// Prompt tokens billed for this response.
+    pub prompt_tokens: Option<u64>,
+    /// Completion tokens billed for this response.
+    pub completion_tokens: Option<u64>,
+    /// Prompt tokens served from cache.
+    pub cached_prompt_tokens: Option<u64>,
+    /// Reasoning/thinking tokens (subset of completion on most providers).
+    pub reasoning_tokens: Option<u64>,
+}
+
+impl LastTurnStats {
+    /// One-line summary: `TPS 16.8 tok/s · TTFT 5.6s · 54.0s · ↑ 1.9k (800 cached) · ↓ 732`.
+    pub fn summary(&self) -> String {
+        let mut parts: Vec<String> = Vec::new();
+        if let Some(tps) = self.tokens_per_sec {
+            parts.push(format!("TPS {tps:.1} tok/s"));
+        }
+        if let Some(ttft) = self.ttft_ms {
+            parts.push(format!("TTFT {}", format_secs_short(ttft)));
+        }
+        parts.push(format_secs_short(self.elapsed_ms));
+        if let Some(r) = self.reasoning_tokens.filter(|r| *r > 0) {
+            parts.push(format!("Σ {}", format_tokens_short(r)));
+        }
+        if let Some(p) = self.prompt_tokens {
+            let cached = self.cached_prompt_tokens.unwrap_or(0);
+            let note = if cached > 0 {
+                format!(" ({} cached)", format_tokens_short(cached))
+            } else {
+                String::new()
+            };
+            parts.push(format!("↑ {}{}", format_tokens_short(p), note));
+        }
+        if let Some(c) = self.completion_tokens {
+            parts.push(format!("↓ {}", format_tokens_short(c)));
+        }
+        parts.join(" · ")
+    }
+}
+
+/// [LOCAL-DEV] Sub-minute durations as `5.6s`; a minute or more defers to
+/// [`format_duration`] (`1m 42s`).
+fn format_secs_short(ms: u64) -> String {
+    if ms >= 60_000 {
+        format_turn_timer(Duration::from_millis(ms))
+    } else {
+        format!("{:.1}s", ms as f64 / 1000.0)
+    }
+}
+
 /// Inputs to [`render_turn_status`] — one frame's worth of turn state.
 #[derive(Debug)]
 pub struct TurnStatusArgs<'a> {
@@ -219,6 +279,8 @@ pub struct TurnStatusArgs<'a> {
     pub flat_background: bool,
     pub held_queue: usize,
     pub held_queue_top_sendable: bool,
+    /// [LOCAL-DEV] Last response stats, pinned above the prompt while idle.
+    pub last_stats: Option<&'a LastTurnStats>,
 }
 
 /// Render the turn status line into the given area.
@@ -249,6 +311,7 @@ pub fn render_turn_status(
         flat_background,
         held_queue,
         held_queue_top_sendable,
+        last_stats,
     } = args;
     // Resolve the mouse affordances: a keyboard-only host (`None`) suppresses
     // both buttons and reports no hover.
@@ -342,6 +405,15 @@ pub fn render_turn_status(
                     .then(|| Rect::new(area.x, area.y, cue_width, 1)),
                 ..TurnStatusOutput::default()
             };
+        }
+        // [LOCAL-DEV] Idle with nothing else to say: pin the last response's
+        // stats above the prompt until the next response refreshes them.
+        if let Some(stats) = last_stats {
+            let spans = vec![Span::styled(
+                stats.summary(),
+                Style::default().fg(theme.gray),
+            )];
+            buf.set_line(area.x, area.y, &Line::from(spans), area.width);
         }
         return TurnStatusOutput::default();
     }
@@ -823,6 +895,7 @@ pub fn should_show(
     mcp_init_progress: Option<&McpInitProgress>,
     watchers: Watchers,
     parked: bool,
+    has_last_stats: bool,
 ) -> bool {
     if parked {
         return true;
@@ -831,6 +904,7 @@ pub fn should_show(
         || drain_blocked
         || starting_session_visible(mcp_init_progress)
         || watchers.total() > 0
+        || has_last_stats
 }
 
 /// Format a duration for the turn/phase timer.

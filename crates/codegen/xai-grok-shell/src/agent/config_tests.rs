@@ -1355,7 +1355,10 @@ fn resolve_credentials_empty_env_key_fails_closed_instead_of_session() {
     assert!(!model.has_own_credentials());
     let creds = resolve_credentials(&model, Some("session-jwt"));
     assert_eq!(creds.auth_type, AuthType::ApiKey);
-    assert_eq!(creds.api_key, None, "declared env_key that resolves to nothing must not silently fall back to the session token");
+    assert_eq!(
+        creds.api_key, None,
+        "declared env_key that resolves to nothing must not silently fall back to the session token"
+    );
 }
 #[test]
 #[serial]
@@ -1375,7 +1378,10 @@ fn resolve_credentials_empty_env_key_fails_closed_instead_of_global_key() {
     assert!(!model.has_own_credentials());
     let creds = resolve_credentials(&model, None);
     assert_eq!(creds.auth_type, AuthType::ApiKey);
-    assert_eq!(creds.api_key, None, "XAI_API_KEY must not ride on a third-party model");
+    assert_eq!(
+        creds.api_key, None,
+        "XAI_API_KEY must not ride on a third-party model"
+    );
 }
 #[test]
 fn resolve_credentials_third_party_model_never_uses_session_token() {
@@ -1383,7 +1389,10 @@ fn resolve_credentials_third_party_model_never_uses_session_token() {
     let model = test_model_entry("m", "https://inference.example/v1", None, None, None);
     let creds = resolve_credentials(&model, Some("session-jwt"));
     assert_eq!(creds.auth_type, AuthType::ApiKey);
-    assert_eq!(creds.api_key, None, "a third-party base_url must not inherit the session token");
+    assert_eq!(
+        creds.api_key, None,
+        "a third-party base_url must not inherit the session token"
+    );
 }
 #[test]
 #[serial]

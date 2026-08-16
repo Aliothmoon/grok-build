@@ -4854,10 +4854,7 @@ pub(crate) fn resolve_credentials(
             .api_base_url
             .as_deref()
             .is_some_and(|url| !crate::util::is_xai_api_url(url));
-    let declared_env_unresolved = model
-        .env_key
-        .as_ref()
-        .is_some_and(|keys| !keys.is_empty())
+    let declared_env_unresolved = model.env_key.as_ref().is_some_and(|keys| !keys.is_empty())
         && model.own_credential().is_none()
         && model.auth_provider.is_none();
     let allow_session_fallback = !session_bearer_unsafe && !declared_env_unresolved;

@@ -951,34 +951,33 @@ impl SessionActor {
         let third_party_provider = auth_provider.is_none()
             && !failed_base_url.is_empty()
             && !crate::util::is_xai_api_url(&failed_base_url);
-        let auth_recovery_eligible = !third_party_provider
-            && matches!(error.kind, SamplingErrorKind::Auth)
-            && {
-            let gate = self.auth_gate(&failed_model_id, &failed_base_url);
-            let eligible = gate.active();
-            self.log_auth_gate_unknown("handle_sampling_failure", gate, &failed_base_url);
-            if !eligible && auth_provider.is_none() {
-                tracing::warn!(
-                    session_id = %self.session_info.id.0,
-                    is_session_based = gate.is_session_based,
-                    model_byok = gate.model_byok.as_str(),
-                    endpoint_is_first_party = gate.endpoint_is_first_party,
-                    "auth recovery: sampler 401 not refreshable (api-key auth) — surfacing 401",
-                );
-                xai_grok_telemetry::unified_log::warn(
-                    "auth recovery: sampler 401 not eligible (api-key auth)",
-                    Some(self.session_info.id.0.as_ref()),
-                    Some(serde_json::json!({
-                        "kind": error.kind.as_str(),
-                        "status_code": error.status_code,
-                        "is_session_based": gate.is_session_based,
-                        "model_byok": gate.model_byok.as_str(),
-                        "endpoint_is_first_party": gate.endpoint_is_first_party,
-                    })),
-                );
-            }
-            eligible
-        };
+        let auth_recovery_eligible =
+            !third_party_provider && matches!(error.kind, SamplingErrorKind::Auth) && {
+                let gate = self.auth_gate(&failed_model_id, &failed_base_url);
+                let eligible = gate.active();
+                self.log_auth_gate_unknown("handle_sampling_failure", gate, &failed_base_url);
+                if !eligible && auth_provider.is_none() {
+                    tracing::warn!(
+                        session_id = %self.session_info.id.0,
+                        is_session_based = gate.is_session_based,
+                        model_byok = gate.model_byok.as_str(),
+                        endpoint_is_first_party = gate.endpoint_is_first_party,
+                        "auth recovery: sampler 401 not refreshable (api-key auth) — surfacing 401",
+                    );
+                    xai_grok_telemetry::unified_log::warn(
+                        "auth recovery: sampler 401 not eligible (api-key auth)",
+                        Some(self.session_info.id.0.as_ref()),
+                        Some(serde_json::json!({
+                            "kind": error.kind.as_str(),
+                            "status_code": error.status_code,
+                            "is_session_based": gate.is_session_based,
+                            "model_byok": gate.model_byok.as_str(),
+                            "endpoint_is_first_party": gate.endpoint_is_first_party,
+                        })),
+                    );
+                }
+                eligible
+            };
         debug_assert!(
             !(auth_recovery_eligible && auth_provider.is_some()),
             "a provider-backed model must not be session-recovery-eligible"

@@ -814,6 +814,9 @@ pub struct AgentSession {
     /// the input box if the user cancels before any response arrives.
     /// `None` for skill-injected prompts (cannot be reversed) and bash/cron.
     pub in_flight_prompt: Option<InFlightPrompt>,
+    /// [LOCAL-DEV] Last response's sampling stats, pinned above the prompt
+    /// while idle (TPS / TTFT / duration / token deltas).
+    pub last_turn_stats: Option<crate::views::turn_status::LastTurnStats>,
     /// Prompt held across auto-compact for reauth resubmit after `/login`.
     /// `in_flight_prompt` is cleared on compact start so cancel cannot rewind.
     pub compact_held_prompt: Option<InFlightPrompt>,
@@ -1195,6 +1198,7 @@ mod tests {
             bg_tool_call_to_task: HashMap::new(),
             scheduled_tasks: HashMap::new(),
             in_flight_prompt: None,
+            last_turn_stats: None,
             compact_held_prompt: None,
             current_prompt_id: None,
             created_via_new: false,

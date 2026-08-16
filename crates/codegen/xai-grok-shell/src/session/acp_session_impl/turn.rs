@@ -2402,17 +2402,15 @@ impl SessionActor {
             );
             // [LOCAL-DEV] Per-response stats footer (TPS / TTFT / duration /
             // token deltas) for the TUI scrollback.
-            self.send_xai_notification(
-                crate::extensions::notification::SessionUpdate::TurnStats {
-                    ttft_ms,
-                    tokens_per_sec,
-                    elapsed_ms: model_elapsed_ms,
-                    prompt_tokens: prompt_tokens.map(u64::from),
-                    completion_tokens: completion_tokens.map(u64::from),
-                    cached_prompt_tokens: cached_prompt_tokens.map(u64::from),
-                    reasoning_tokens: reasoning_tokens.map(u64::from),
-                },
-            )
+            self.send_xai_notification(crate::extensions::notification::SessionUpdate::TurnStats {
+                ttft_ms,
+                tokens_per_sec,
+                elapsed_ms: model_elapsed_ms,
+                prompt_tokens: prompt_tokens.map(u64::from),
+                completion_tokens: completion_tokens.map(u64::from),
+                cached_prompt_tokens: cached_prompt_tokens.map(u64::from),
+                reasoning_tokens: reasoning_tokens.map(u64::from),
+            })
             .await;
             if let Some(usage) = response.usage.as_ref() {
                 self.chat_state_handle

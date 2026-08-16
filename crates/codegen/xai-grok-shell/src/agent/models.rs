@@ -276,8 +276,7 @@ impl ModelsManagerBuilder {
         } else {
             IndexMap::new()
         };
-        let refresh_dev_catalog =
-            dev_catalog::enabled(&self.cfg) && dev_catalog::needs_refresh();
+        let refresh_dev_catalog = dev_catalog::enabled(&self.cfg) && dev_catalog::needs_refresh();
         let manager = ModelsManager {
             inner: Arc::new(Inner {
                 catalog: RwLock::new(CatalogState {

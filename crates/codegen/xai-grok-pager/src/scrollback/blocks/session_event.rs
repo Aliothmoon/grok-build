@@ -68,6 +68,12 @@ pub enum SessionEvent {
         /// Percentage of context window used (e.g., 85).
         percentage: u8,
     },
+    /// [LOCAL-DEV] A significant prompt-cache miss was re-billed on the
+    /// previous response (PI-style notice). Muted one-liner.
+    CacheMiss {
+        /// Pre-rendered notice text (e.g. `Cache miss after 44m idle: 162k tokens re-billed`).
+        message: String,
+    },
     /// Auto-compaction completed successfully.
     CompactionCompleted {
         /// Tokens used before compaction (`None` from older shells).
@@ -199,6 +205,7 @@ impl SessionEvent {
             SessionEvent::CompactionStarted { percentage } => {
                 format!("Context {percentage}% full. Compacting…")
             }
+            SessionEvent::CacheMiss { message } => message.clone(),
             SessionEvent::CompactionCompleted {
                 tokens_before,
                 tokens_after,

@@ -557,6 +557,13 @@ pub enum SessionUpdate {
     /// muted one-liner after each model response:
     /// `TPS 16.8 tok/s | TTFT 5.6s | 54.0s | ↑ 1.9k | ↓ 732`.
     TurnStats {
+        /// Model that produced this response (`provider`-free id).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        model: Option<String>,
+        /// Idle gap since the previous model response completed
+        /// (response-to-response, tools included), milliseconds.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        idle_ms: Option<u64>,
         /// Time to first token, milliseconds.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         ttft_ms: Option<u64>,

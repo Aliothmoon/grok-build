@@ -1358,6 +1358,7 @@ mod cancel_turn_mouse_tests {
                 scheduled_tasks: std::collections::HashMap::new(),
                 in_flight_prompt: None,
                 last_turn_stats: None,
+                prev_turn_for_cache: None,
                 compact_held_prompt: None,
                 current_prompt_id: None,
                 created_via_new: false,

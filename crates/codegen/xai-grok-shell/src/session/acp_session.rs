@@ -629,6 +629,9 @@ pub(crate) struct ModelAuthMemo {
 /// Phase 3: Post-flight handling after dispatch (inline in execute_tool_calls for now).
 pub(crate) struct SessionActor {
     pub(crate) session_info: SessionInfo,
+    /// [LOCAL-DEV] Cache-miss tracking: when the previous model response
+    /// completed (for the `Cache miss after Xm idle` notice).
+    pub(crate) last_response_at: parking_lot::Mutex<Option<std::time::Instant>>,
     /// Shared live handle to the current ACP auth method. Normal sessions hold a
     /// clone of `MvpAgent::auth_method_id`, so a mid-session `/login` is picked
     /// up by the per-turn auth gate without re-spawning; subagents instead get a

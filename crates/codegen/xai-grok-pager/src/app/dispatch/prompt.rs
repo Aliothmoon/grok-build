@@ -1636,6 +1636,9 @@ pub(super) fn handle_compact_complete(
 
         let elapsed = agent.turn_elapsed();
         agent.session.finish_command();
+        // [LOCAL-DEV] Manual /compact rewrites the context: drop the
+        // cache-miss baseline (next prompt is new content, not re-billed).
+        agent.session.prev_turn_for_cache = None;
 
         match &result {
             Ok(()) => {

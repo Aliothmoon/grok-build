@@ -2402,7 +2402,16 @@ impl SessionActor {
             );
             // [LOCAL-DEV] Per-response stats footer (TPS / TTFT / duration /
             // token deltas) for the TUI scrollback.
+            let now = std::time::Instant::now();
+            let idle_ms = {
+                let mut last = self.last_response_at.lock();
+                last.replace(now)
+                    .map(|prev| u64::try_from(prev.elapsed().as_millis()).unwrap_or(u64::MAX))
+            };
+            let model_id = self.current_model_id().await;
             self.send_xai_notification(crate::extensions::notification::SessionUpdate::TurnStats {
+                model: Some(model_id),
+                idle_ms,
                 ttft_ms,
                 tokens_per_sec,
                 elapsed_ms: model_elapsed_ms,

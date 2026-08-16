@@ -518,6 +518,7 @@ pub(super) fn handle_session_notification_with_origin(
                 deferred_model_switch: None,
                 in_flight_prompt: None,
                 last_turn_stats: None,
+                prev_turn_for_cache: None,
                 compact_held_prompt: None,
                 current_prompt_id: None,
                 created_via_new: false,
@@ -1443,6 +1444,10 @@ pub(super) fn apply_session_event(
             tracing::info!("Auto-compact completed: {tokens_after} tokens after");
             session.set_compaction_activity(None);
             session.compact_held_prompt = None;
+            // [LOCAL-DEV] The context legitimately changed: the next prompt
+            // is new content, not re-billed content — drop the cache-miss
+            // baseline so the next response can't be counted as a miss.
+            session.prev_turn_for_cache = None;
             if session.loading_replay {
                 scrollback.push_block(RenderBlock::session_event(
                     SessionEvent::CompactionCompleted {
@@ -1485,8 +1490,11 @@ pub(super) fn apply_session_event(
             true
         }
         // [LOCAL-DEV] Per-response stats: pin above the prompt (idle turn
-        // status row), not the scrollback.
+        // status row), not the scrollback — plus a one-off scrollback notice
+        // when this response re-billed a significant cache miss (PI-style).
         XaiSessionUpdate::TurnStats {
+            model,
+            idle_ms,
             ttft_ms,
             tokens_per_sec,
             elapsed_ms,
@@ -1495,7 +1503,9 @@ pub(super) fn apply_session_event(
             cached_prompt_tokens,
             reasoning_tokens,
         } => {
-            session.last_turn_stats = Some(crate::views::turn_status::LastTurnStats {
+            let stats = crate::views::turn_status::LastTurnStats {
+                model: model.clone(),
+                idle_ms: *idle_ms,
                 ttft_ms: *ttft_ms,
                 tokens_per_sec: *tokens_per_sec,
                 elapsed_ms: *elapsed_ms,
@@ -1503,7 +1513,16 @@ pub(super) fn apply_session_event(
                 completion_tokens: *completion_tokens,
                 cached_prompt_tokens: *cached_prompt_tokens,
                 reasoning_tokens: *reasoning_tokens,
-            });
+            };
+            if let Some(prev) = session.prev_turn_for_cache.take()
+                && let Some(miss) = crate::views::turn_status::detect_cache_miss(&prev, &stats)
+            {
+                scrollback.push_block(RenderBlock::session_event(SessionEvent::CacheMiss {
+                    message: miss.message(),
+                }));
+            }
+            session.prev_turn_for_cache = Some(stats.clone());
+            session.last_turn_stats = Some(stats);
             true
         }
         _ => false,

@@ -197,6 +197,10 @@ pub fn is_sendable_wait(activity: &Option<TurnActivity>) -> bool {
 /// prompt while idle. Refreshed on every `SessionUpdate::TurnStats`.
 #[derive(Debug, Clone, Default)]
 pub struct LastTurnStats {
+    /// Model that produced this response (`Option` from older shells).
+    pub model: Option<String>,
+    /// Idle gap since the previous response completed, milliseconds.
+    pub idle_ms: Option<u64>,
     /// Time to first token, milliseconds.
     pub ttft_ms: Option<u64>,
     /// Decode throughput (completion tokens / decode window).
@@ -214,6 +218,11 @@ pub struct LastTurnStats {
 }
 
 impl LastTurnStats {
+    /// Whether this response reported any cache activity at all.
+    pub fn reported_cache(&self) -> bool {
+        self.cached_prompt_tokens.unwrap_or(0) > 0
+    }
+
     /// One-line summary: `TPS 16.8 tok/s · TTFT 5.6s · 54.0s · ↑ 1.9k (800 cached) · ↓ 732`.
     pub fn summary(&self) -> String {
         let mut parts: Vec<String> = Vec::new();
@@ -251,6 +260,75 @@ fn format_secs_short(ms: u64) -> String {
     } else {
         format!("{:.1}s", ms as f64 / 1000.0)
     }
+}
+
+/// [LOCAL-DEV] Prompt-cache TTL: idle gaps longer than this are worth
+/// mentioning as the likely cause of a miss (Anthropic default: 5 minutes).
+pub(crate) const CACHE_TTL_MS: u64 = 5 * 60 * 1000;
+/// Misses at or below this are cache-breakpoint granularity noise.
+const CACHE_MISS_NOISE_FLOOR_TOKENS: u64 = 1024;
+/// Only mention misses this large (token volume; we have no price table).
+const CACHE_MISS_NOTICE_FLOOR_TOKENS: u64 = 20_000;
+
+/// [LOCAL-DEV] A counted cache miss on one response, relative to the previous
+/// request (PI-style: `min(prev, cur) prompt - cacheRead`).
+#[derive(Debug, Clone)]
+pub struct CacheMissNotice {
+    /// Tokens that were in the previous prompt but re-billed this request.
+    pub missed_tokens: u64,
+    /// Response-to-response idle gap, milliseconds.
+    pub idle_ms: u64,
+    /// The model changed between the two responses.
+    pub model_changed: bool,
+}
+
+impl CacheMissNotice {
+    /// `Cache miss after 44m idle: 162k tokens re-billed` (PI wording).
+    pub fn message(&self) -> String {
+        let label = if self.model_changed {
+            "Cache miss after model switch".to_string()
+        } else if self.idle_ms >= CACHE_TTL_MS {
+            format!("Cache miss after {}m idle", (self.idle_ms / 60_000).max(1))
+        } else {
+            "Cache miss".to_string()
+        };
+        format!(
+            "{label}: {} tokens re-billed",
+            format_tokens_short(self.missed_tokens)
+        )
+    }
+}
+
+/// [LOCAL-DEV] Detect a re-billed cache miss between two consecutive
+/// responses. `None` when nothing is worth mentioning: first response, a
+/// provider that never reported cache activity, or a miss below the noise
+/// floor / notice floor.
+pub fn detect_cache_miss(prev: &LastTurnStats, cur: &LastTurnStats) -> Option<CacheMissNotice> {
+    let cur_prompt = cur.prompt_tokens?;
+    if cur_prompt == 0 {
+        return None;
+    }
+    let cur_cached = cur.cached_prompt_tokens.unwrap_or(0);
+    let cur_reported_cache = cur_cached > 0;
+    // A zero-cache turn only counts when cache activity was reported before:
+    // on cache-read-only providers that is a total miss, while on providers
+    // that never report caching it means nothing.
+    if cur_cached == 0 && !prev.reported_cache() {
+        return None;
+    }
+    let prev_prompt = prev.prompt_tokens.unwrap_or(0);
+    let missed = prev_prompt.min(cur_prompt).saturating_sub(cur_cached);
+    if missed <= CACHE_MISS_NOISE_FLOOR_TOKENS || missed < CACHE_MISS_NOTICE_FLOOR_TOKENS {
+        return None;
+    }
+    Some(CacheMissNotice {
+        missed_tokens: missed,
+        idle_ms: cur.idle_ms.unwrap_or(0),
+        model_changed: match (&prev.model, &cur.model) {
+            (Some(p), Some(c)) => p != c,
+            _ => false,
+        },
+    })
 }
 
 /// Inputs to [`render_turn_status`] — one frame's worth of turn state.

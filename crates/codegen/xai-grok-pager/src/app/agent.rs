@@ -704,13 +704,17 @@ pub struct DeferredModelSwitch {
 /// `start_turn`, `finish_turn`, `turn_activity`) instead of accessing
 /// the tracker directly.
 /// [LOCAL-DEV] Session-cumulative usage totals for the bottom-right chip.
+/// Cache accounting follows the pi-usage-extension convention: `↑` counts
+/// only *fresh* prompt tokens (uncached input + cache writes) so cache hits
+/// don't inflate the total; `cached_read` rides separately for the hit rate.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct SessionUsageTotals {
-    /// All prompt-side tokens billed (input + cache read + cache write).
-    pub prompt: u64,
+    /// Fresh prompt-side tokens paid at full-ish price (uncached input +
+    /// cache writes) — excludes cache reads.
+    pub fresh: u64,
     /// All completion tokens.
     pub output: u64,
-    /// Prompt tokens served from cache (subset of `prompt`).
+    /// Prompt tokens served from cache.
     pub cached_read: u64,
 }
 

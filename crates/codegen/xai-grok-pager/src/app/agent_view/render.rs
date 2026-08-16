@@ -3382,12 +3382,13 @@ impl AgentView {
         // `↑ 1.4M | ↓ 299k | c 99.8%` (prompt-side / completion / cache hit
         // rate over billed prompt tokens).
         let usage_chip = self.session.session_usage.and_then(|u| {
-            (u.prompt > 0).then(|| {
+            let billed = u.fresh + u.cached_read;
+            (billed > 0).then(|| {
                 format!(
                     "↑ {} | ↓ {} | c {:.1}%",
-                    context_bar::fmt_tokens(u.prompt),
+                    context_bar::fmt_tokens(u.fresh),
                     context_bar::fmt_tokens(u.output),
-                    (u.cached_read as f64 / u.prompt as f64) * 100.0
+                    (u.cached_read as f64 / billed as f64) * 100.0
                 )
             })
         });

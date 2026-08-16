@@ -602,8 +602,8 @@ mod tests {
             ..ModelTally::default()
         };
         let usd = estimate_cost(&prices, "test-model", &t).unwrap();
-        // 3*1 + 15*2 + 0.3*4 = 22.2
-        assert!((usd - 22.2).abs() < 1e-6);
+        // 3*1 + 15*2 + 0.3*4 = 34.2
+        assert!((usd - 34.2).abs() < 1e-6);
         assert!(estimate_cost(&prices, "unknown-model", &t).is_none());
     }
 }

@@ -81,6 +81,10 @@ struct Dialect {
     api_backend: ApiBackend,
     auth_scheme: AuthScheme,
     extra_headers: IndexMap<String, String>,
+    /// See [`ModelInfo::model_family`]: the family that mints this model's
+    /// conversation items. A cross-family mid-session switch forces a
+    /// (lossy) compaction, so it must match the wire dialect, not the brand.
+    model_family: &'static str,
 }
 
 fn dialect_for(api: Option<&str>) -> Dialect {
@@ -93,10 +97,15 @@ fn dialect_for(api: Option<&str>) -> Dialect {
         "openai-responses" => (ApiBackend::Responses, AuthScheme::Bearer),
         _ => (ApiBackend::ChatCompletions, AuthScheme::Bearer),
     };
+    let model_family = match api_backend {
+        ApiBackend::Messages => "anthropic",
+        _ => "openai",
+    };
     Dialect {
         api_backend,
         auth_scheme,
         extra_headers,
+        model_family,
     }
 }
 
@@ -177,6 +186,7 @@ pub(crate) fn expand(json: &str) -> IndexMap<String, ModelEntry> {
             let config = ModelEntryConfig {
                 id: Some(key.clone()),
                 model: mid.clone(),
+                model_family: Some(dialect.model_family.to_string()),
                 base_url: base_url.to_string(),
                 name: Some(model.name.clone().unwrap_or_else(|| mid.clone())),
                 description: Some(description),

@@ -1,8 +1,32 @@
 use super::*;
 impl SessionActor {
-    /// Wait for MCP tools to be initialized.
-    /// If initialization is in progress by another task, this will poll until complete.
+    /// Upper bound on how long a turn waits for MCP initialization to
+    /// finish before degrading to a partial tool set.
+    ///
+    /// Per-server handshakes already carry their own `init_budget`
+    /// (startup_timeout×2+5s), but the *aggregate* wait had no budget:
+    /// a stuck per-server task (or a caller racing the init lifecycle)
+    /// left the handshaking set non-empty forever, so
+    /// [`Self::wait_for_mcp_initialized`] spun on its 10ms poll
+    /// indefinitely and the turn hung with no tool_prep_done. This
+    /// bounds that aggregate wait.
+    const MCP_WAIT_BUDGET_MS: u64 = 30_000;
+    /// How often the degraded-wait loop logs its handshaking snapshot
+    /// while it is still within budget.
+    const MCP_WAIT_PROGRESS_LOG_MS: u64 = 5_000;
+
+    /// Wait for MCP tools to be initialized, with a hard budget.
+    ///
+    /// If initialization is in progress by another task, this polls until
+    /// complete. If the budget elapses first, it emits an
+    /// `McpInitDegraded` event (naming the servers still handshaking),
+    /// logs a warning, and returns **without** forcing init — the turn
+    /// proceeds with the tools that already settled, and late servers
+    /// register on a later turn.
     pub(super) async fn wait_for_mcp_initialized(&self) {
+        let deadline = std::time::Instant::now()
+            + std::time::Duration::from_millis(Self::MCP_WAIT_BUDGET_MS);
+        let mut last_progress_log = std::time::Instant::now();
         loop {
             {
                 let mcp_state = self.mcp_state.lock().await;
@@ -11,6 +35,38 @@ impl SessionActor {
                 }
                 if !mcp_state.is_initializing() {
                     break;
+                }
+                if last_progress_log.elapsed()
+                    >= std::time::Duration::from_millis(Self::MCP_WAIT_PROGRESS_LOG_MS)
+                {
+                    let pending: Vec<String> = mcp_state
+                        .handshaking_servers_iter()
+                        .map(|s| s.to_string())
+                        .collect();
+                    tracing::warn!(
+                        pending = ?pending,
+                        "MCP init still in progress; waiting (budget {}ms)",
+                        Self::MCP_WAIT_BUDGET_MS
+                    );
+                    last_progress_log = std::time::Instant::now();
+                }
+                if std::time::Instant::now() >= deadline {
+                    let pending: Vec<String> = mcp_state
+                        .handshaking_servers_iter()
+                        .map(|s| s.to_string())
+                        .collect();
+                    tracing::warn!(
+                        pending = ?pending,
+                        "MCP init budget elapsed ({}ms); degrading with partial tool set",
+                        Self::MCP_WAIT_BUDGET_MS
+                    );
+                    self.events.emit(
+                        xai_grok_session_events::Event::McpInitDegraded {
+                            budget_ms: Self::MCP_WAIT_BUDGET_MS,
+                            pending_servers: pending,
+                        },
+                    );
+                    return;
                 }
             }
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;

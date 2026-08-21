@@ -409,6 +409,14 @@ pub enum Event {
     McpInitCancelled {
         reason: String,
     },
+    /// The session waited past its MCP-init budget and proceeded with a
+    /// partial tool set. Lists which servers were still handshaking so the
+    /// UI can name them instead of a bare "MCP slow" notice.
+    McpInitDegraded {
+        budget_ms: u64,
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        pending_servers: Vec<String>,
+    },
     McpToolCallStarted {
         server_name: String,
         tool_name: String,
